@@ -403,18 +403,37 @@ void FaceStickerFilter::RenderStickerItem(
     return;
   }
 
-  float base_angle = std::atan2(dy, dx);
-  float angle = base_angle + item.rotation_offset_deg * 3.1415926535f / 180.0f;
+  // Vector from chin to forehead points directly towards the top of the head in image coordinates
+  float head_dx = p_forehead.x - p_chin.x;
+  float head_dy = p_forehead.y - p_chin.y;
+  float head_len = std::sqrt(head_dx * head_dx + head_dy * head_dy);
 
-  Point2D right_vec = {std::cos(angle), std::sin(angle)};
-  Point2D up_vec = {std::sin(angle), -std::cos(angle)};  // Up in screen space
+  Point2D head_up = {0.0f, -1.0f};
+  if (head_len > 1.0f) {
+    head_up = {head_dx / head_len, head_dy / head_len};
+  }
+  // Perpendicular vector pointing to viewer's right (person's left)
+  Point2D head_right = {-head_up.y, head_up.x};
+
+  // Apply optional rotation offset
+  float rot_rad = item.rotation_offset_deg * 3.1415926535f / 180.0f;
+  float cos_r = std::cos(rot_rad);
+  float sin_r = std::sin(rot_rad);
+  Point2D right_vec = {
+      head_right.x * cos_r - head_up.x * sin_r,
+      head_right.y * cos_r - head_up.y * sin_r,
+  };
+  Point2D up_vec = {
+      head_right.x * sin_r + head_up.x * cos_r,
+      head_right.y * sin_r + head_up.y * cos_r,
+  };
 
   Point2D anchor_center = p_forehead;
   switch (item.anchor) {
     case kAnchorForehead:
       anchor_center = {
-          p_forehead.x + up_vec.x * (d_eye * 0.65f),
-          p_forehead.y + up_vec.y * (d_eye * 0.65f),
+          p_forehead.x + up_vec.x * (d_eye * 0.75f),
+          p_forehead.y + up_vec.y * (d_eye * 0.75f),
       };
       break;
     case kAnchorEyes:
@@ -485,10 +504,13 @@ void FaceStickerFilter::RenderStickerItem(
       final_center.y + right_vec.y * hw - up_vec.y * hh,
   };
 
+  // Convert image coordinates [0..fb_width, 0..fb_height] to GPUPixel FBO NDC [-1..1, -1..1]
+  // In GPUPixel's internal FBO pipeline, NDC y = -1.0 corresponds to image top, and y = +1.0 corresponds to image bottom.
+  // The display sink (SinkSurface / SinkRawData) performs the final Y-flip when presenting on screen.
   auto to_ndc = [&](const Point2D& p) -> Point2D {
     return Point2D{
         (p.x / fb_width) * 2.0f - 1.0f,
-        1.0f - (p.y / fb_height) * 2.0f,
+        (p.y / fb_height) * 2.0f - 1.0f,
     };
   };
 
