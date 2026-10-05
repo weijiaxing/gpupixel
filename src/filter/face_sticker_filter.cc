@@ -10,6 +10,7 @@
 #include <cmath>
 #include "core/gpupixel_context.h"
 #include "core/gpupixel_program.h"
+#include "utils/filesystem.h"
 #include "utils/logging.h"
 #include "utils/util.h"
 
@@ -150,6 +151,13 @@ bool FaceStickerFilter::Init() {
   RegisterProperty("alpha", 1.0f, "Sticker alpha between 0.0 and 1.0.",
                    [this](float& val) { SetAlpha(val); });
 
+  RegisterProperty("fps", 15, "Animation frame rate (frames per second).",
+                   [this](int& val) {
+                     if (!stickers_.empty()) {
+                       stickers_[0].fps = val;
+                     }
+                   });
+
   return true;
 }
 
@@ -165,6 +173,20 @@ void FaceStickerFilter::SetFaceLandmarks(const std::vector<float>& landmarks) {
 
 void FaceStickerFilter::SetStickerPath(const std::string& path) {
   if (path.empty()) return;
+  if (fs::exists(path) && fs::is_directory(path)) {
+    std::vector<std::string> frame_paths;
+    for (const auto& entry : fs::directory_iterator(path)) {
+      if (entry.path().extension() == ".png") {
+        frame_paths.push_back(entry.path().string());
+      }
+    }
+    std::sort(frame_paths.begin(), frame_paths.end());
+    if (!frame_paths.empty()) {
+      int fps = stickers_.empty() ? 15 : stickers_[0].fps;
+      SetStickerFrames(frame_paths, fps);
+      return;
+    }
+  }
   auto img = SourceImage::Create(path);
   SetStickerImage(img);
 }

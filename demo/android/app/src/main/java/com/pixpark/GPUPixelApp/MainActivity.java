@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int CAT_MAKEUP = 2;  // 美妆
     private static final int CAT_FILTER = 3;  // 滤镜
     private static final int CAT_STICKER = 4; // 贴纸
+    private static final int CAT_ANIM_STICKER = 5; // 动态贴纸
 
     // Item ID constants
     private static final int ID_SMOOTH = 1;
@@ -83,6 +84,19 @@ public class MainActivity extends AppCompatActivity {
     private static final int ID_STICKER_CLOWN_NOSE = 21;
     private static final int ID_STICKER_MUSTACHE = 22;
     private static final int ID_STICKER_FLOWER_HAIRPIN = 23;
+
+    // Animated sticker IDs
+    private static final int ID_ANIM_NONE = 30;
+    private static final int ID_ANIM_HEARTS = 31;
+    private static final int ID_ANIM_CAT_EARS = 32;
+    private static final int ID_ANIM_CROWN = 33;
+    private static final int ID_ANIM_HALO = 34;
+    private static final int ID_ANIM_DEVIL = 35;
+    private static final int ID_ANIM_FIREWORKS = 36;
+    private static final int ID_ANIM_TEARS = 37;
+    private static final int ID_ANIM_STEAM = 38;
+    private static final int ID_ANIM_COINS = 39;
+    private static final int ID_ANIM_DIZZY = 40;
 
     public static class BeautyOption {
         int id;
@@ -179,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
         mOptions.add(new BeautyOption(ID_FILTER_FILM, "胶片", R.drawable.ic_filter, CAT_FILTER, 100));
         mOptions.add(new BeautyOption(ID_FILTER_BW, "黑白", R.drawable.ic_filter, CAT_FILTER, 100));
 
-        // 贴纸 (10款精美贴纸)
+        // 静态贴纸 (10款)
         mOptions.add(new BeautyOption(ID_STICKER_NONE, "无贴纸", R.drawable.ic_reset, CAT_STICKER, 0));
         mOptions.add(new BeautyOption(ID_STICKER_CAT_EARS, "猫耳朵", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
         mOptions.add(new BeautyOption(ID_STICKER_BUNNY_EARS, "兔耳朵", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
@@ -191,6 +205,19 @@ public class MainActivity extends AppCompatActivity {
         mOptions.add(new BeautyOption(ID_STICKER_CLOWN_NOSE, "小丑鼻", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
         mOptions.add(new BeautyOption(ID_STICKER_MUSTACHE, "绅士胡", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
         mOptions.add(new BeautyOption(ID_STICKER_FLOWER_HAIRPIN, "樱花夹", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+
+        // 动态贴纸 (10款)
+        mOptions.add(new BeautyOption(ID_ANIM_NONE, "无动态", R.drawable.ic_reset, CAT_ANIM_STICKER, 0));
+        mOptions.add(new BeautyOption(ID_ANIM_HEARTS, "闪烁心动", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_CAT_EARS, "动感猫耳", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_CROWN, "闪耀皇冠", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_HALO, "霓虹光环", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_DEVIL, "烈焰恶魔", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_FIREWORKS, "派对礼花", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_TEARS, "二次元泪", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_STEAM, "冒烟怒火", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_COINS, "招财金币", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_ANIM_DIZZY, "转圈晕星", R.drawable.ic_beauty_wand, CAT_ANIM_STICKER, 100));
 
         // Default selected option: 磨皮
         mSelectedOption = mOptions.get(0);
@@ -298,6 +325,7 @@ public class MainActivity extends AppCompatActivity {
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("美妆"));
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("滤镜"));
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("贴纸"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("动态"));
 
         binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -368,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
             boolean isSelected;
             if (category == CAT_FILTER) {
                 isSelected = (option.id == mSelectedFilterId);
-            } else if (category == CAT_STICKER) {
+            } else if (category == CAT_STICKER || category == CAT_ANIM_STICKER) {
                 isSelected = (option.id == mSelectedStickerId);
             } else {
                 isSelected = (mSelectedOption != null && mSelectedOption.id == option.id);
@@ -381,7 +409,7 @@ public class MainActivity extends AppCompatActivity {
                     mSelectedFilterId = option.id;
                     applyFilterPreset(mSelectedFilterId);
                     refreshItemsForCategory(category);
-                } else if (category == CAT_STICKER) {
+                } else if (category == CAT_STICKER || category == CAT_ANIM_STICKER) {
                     mSelectedStickerId = option.id;
                     applyStickerPreset(mSelectedStickerId);
                     refreshItemsForCategory(category);
@@ -395,12 +423,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // If category changed and current selected option not in this category, select first
-        if (category != CAT_FILTER && category != CAT_STICKER && (mSelectedOption == null || mSelectedOption.category != category)) {
+        if (category != CAT_FILTER && category != CAT_STICKER && category != CAT_ANIM_STICKER && (mSelectedOption == null || mSelectedOption.category != category)) {
             if (firstInCat != null) {
                 selectBeautyOption(firstInCat);
             }
-        } else if (category == CAT_FILTER || category == CAT_STICKER) {
-            // For filter/sticker tab, hide the slider
+        } else if (category == CAT_FILTER || category == CAT_STICKER || category == CAT_ANIM_STICKER) {
+            // For filter/sticker/anim tab, hide the slider
             binding.layoutSlider.setVisibility(View.GONE);
         } else {
             binding.layoutSlider.setVisibility(View.VISIBLE);
@@ -629,6 +657,136 @@ public class MainActivity extends AppCompatActivity {
                     mFaceStickerFilter.SetProperty("scale", 0.65f);
                     mFaceStickerFilter.SetProperty("offset_x", 0.5f);
                     mFaceStickerFilter.SetProperty("offset_y", 0.15f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_HEARTS: {
+                File dir = new File(resDir, "anim_hearts");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 1); // 1: Eyes
+                    mFaceStickerFilter.SetProperty("scale", 1.15f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", -0.22f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_CAT_EARS: {
+                File dir = new File(resDir, "anim_cat_ears");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.0f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.0f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_CROWN: {
+                File dir = new File(resDir, "anim_crown");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 0.95f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.05f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_HALO: {
+                File dir = new File(resDir, "anim_halo");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.05f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.35f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_DEVIL: {
+                File dir = new File(resDir, "anim_devil");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 0.95f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.0f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_FIREWORKS: {
+                File dir = new File(resDir, "anim_fireworks");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 10);
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.25f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.35f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_TEARS: {
+                File dir = new File(resDir, "anim_tears");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 1); // 1: Eyes
+                    mFaceStickerFilter.SetProperty("scale", 1.1f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", -0.4f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_STEAM: {
+                File dir = new File(resDir, "anim_steam");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.2f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.1f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_COINS: {
+                File dir = new File(resDir, "anim_coins");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.2f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.35f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_ANIM_DIZZY: {
+                File dir = new File(resDir, "anim_dizzy");
+                if (dir.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", dir.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("fps", 12);
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.1f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.35f);
                     mFaceStickerFilter.SetProperty("alpha", 1.0f);
                 }
                 break;

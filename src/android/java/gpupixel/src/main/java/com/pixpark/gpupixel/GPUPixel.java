@@ -111,8 +111,16 @@ public class GPUPixel {
                         || assetPath.toLowerCase().endsWith(".jpeg")
                         || assetPath.toLowerCase().endsWith(".png")
                         || assetPath.toLowerCase().endsWith(".gif")) {
-                    // Image files to res directory
-                    targetPath = exPath + "/gpupixel/res/" + new File(assetPath).getName();
+                    // Image files to res directory (preserve subdirectories if any)
+                    String relPath = assetPath;
+                    if (relPath.startsWith("res/")) {
+                        relPath = relPath.substring(4);
+                    }
+                    targetPath = exPath + "/gpupixel/res/" + relPath;
+                    File parentDir = new File(targetPath).getParentFile();
+                    if (parentDir != null && !parentDir.exists()) {
+                        parentDir.mkdirs();
+                    }
                 } else if (assetPath.toLowerCase().endsWith(".mars_model")) {
                     // .mars_model files to models directory
                     targetPath = exPath + "/gpupixel/models/" + new File(assetPath).getName();

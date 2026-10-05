@@ -246,6 +246,9 @@ set(lib_image_resource_files
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_origin.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_skin.png)
 
+file(GLOB_RECURSE anim_resource_files ${CMAKE_CURRENT_SOURCE_DIR}/res/anim_*/*.png)
+list(APPEND lib_image_resource_files ${anim_resource_files})
+
 set(lib_models_resource_files
     ${PROJECT_SOURCE_DIR}/third_party/mars-face-kit/models/face_align.mars_model
     ${PROJECT_SOURCE_DIR}/third_party/mars-face-kit/models/face_det.mars_model)
