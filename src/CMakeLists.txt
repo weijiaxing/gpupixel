@@ -78,6 +78,7 @@ set(common_source_files
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/gaussian_blur_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/beauty_face_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/face_reshape_filter.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/filter/face_sticker_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/white_balance_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/smooth_toon_filter.cc)
 
@@ -169,6 +170,7 @@ set(public_filter_header_files
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/blusher_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/bilateral_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/face_reshape_filter.h
+    ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/face_sticker_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/box_mono_blur_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/nearby_sampling3x3_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/gaussian_blur_mono_filter.h
@@ -228,6 +230,7 @@ endif()
 set(lib_image_resource_files
     ${CMAKE_CURRENT_SOURCE_DIR}/res/mouth.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/blusher.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/cat_ears.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_gray.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_light.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_custom.png

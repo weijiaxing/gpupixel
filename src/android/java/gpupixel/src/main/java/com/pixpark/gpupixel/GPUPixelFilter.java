@@ -13,6 +13,7 @@ public class GPUPixelFilter extends GPUPixelSource implements GPUPixelSink {
     // Beauty-related filters
     public static final String BEAUTY_FACE_FILTER = "BeautyFaceFilter";
     public static final String FACE_RESHAPE_FILTER = "FaceReshapeFilter";
+    public static final String FACE_STICKER_FILTER = "FaceStickerFilter";
     public static final String LIPSTICK_FILTER = "LipstickFilter";
     public static final String BLUSHER_FILTER = "BlusherFilter";
     public static final String FACE_MAKEUP_FILTER = "FaceMakeupFilter";

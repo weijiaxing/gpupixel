@@ -37,6 +37,7 @@ std::shared_ptr<BeautyFaceFilter> beauty_filter_;
 std::shared_ptr<FaceReshapeFilter> reshape_filter_;
 std::shared_ptr<gpupixel::LipstickFilter> lipstick_filter_;
 std::shared_ptr<gpupixel::BlusherFilter> blusher_filter_;
+std::shared_ptr<gpupixel::FaceStickerFilter> sticker_filter_;
 std::shared_ptr<SourceImage> source_image_;
 std::shared_ptr<SinkRawData> sink_raw_data_;
 #ifdef GPUPIXEL_ENABLE_FACE_DETECTOR
@@ -50,6 +51,10 @@ float face_slim_strength_ = 0.0f;
 float eye_enlarge_strength_ = 0.0f;
 float lipstick_strength_ = 0.0f;
 float blusher_strength_ = 0.0f;
+float sticker_scale_ = 1.0f;
+float sticker_offset_y_ = 0.0f;
+float sticker_alpha_ = 1.0f;
+bool enable_sticker_ = false;
 
 // GLFW window handle
 GLFWwindow* main_window_ = nullptr;
@@ -210,6 +215,15 @@ void SetupFilterPipeline() {
   blusher_filter_ = BlusherFilter::Create();
   reshape_filter_ = FaceReshapeFilter::Create();
   beauty_filter_ = BeautyFaceFilter::Create();
+  sticker_filter_ = FaceStickerFilter::Create();
+
+  auto cat_ears_path = resource_path / "res" / "cat_ears.png";
+  if (fs::exists(cat_ears_path)) {
+    sticker_filter_->SetStickerPath(cat_ears_path.string());
+    sticker_filter_->SetAnchor(kAnchorForehead);
+    sticker_filter_->SetScale(sticker_scale_);
+    sticker_filter_->SetAlpha(0.0f);  // Default off
+  }
 
 #ifdef GPUPIXEL_ENABLE_FACE_DETECTOR
   face_detector_ = FaceDetector::Create();
@@ -224,6 +238,7 @@ void SetupFilterPipeline() {
       ->AddSink(blusher_filter_)
       ->AddSink(reshape_filter_)
       ->AddSink(beauty_filter_)
+      ->AddSink(sticker_filter_)
       ->AddSink(sink_raw_data_);
 }
 
@@ -255,6 +270,24 @@ void UpdateFilterParametersFromUI() {
 
   if (ImGui::SliderFloat("Blusher", &blusher_strength_, 0.0f, 10.0f)) {
     blusher_filter_->SetBlendLevel(blusher_strength_ / 10.0f);
+  }
+
+  ImGui::Separator();
+  ImGui::Text("Face Sticker");
+  if (ImGui::Checkbox("Enable Sticker (Cat Ears)", &enable_sticker_)) {
+    sticker_filter_->SetAlpha(enable_sticker_ ? sticker_alpha_ : 0.0f);
+  }
+  if (enable_sticker_) {
+    if (ImGui::SliderFloat("Sticker Alpha", &sticker_alpha_, 0.0f, 1.0f)) {
+      sticker_filter_->SetAlpha(sticker_alpha_);
+    }
+    if (ImGui::SliderFloat("Sticker Scale", &sticker_scale_, 0.2f, 2.5f)) {
+      sticker_filter_->SetScale(sticker_scale_);
+    }
+    if (ImGui::SliderFloat("Sticker Offset Y", &sticker_offset_y_, -1.0f,
+                           1.0f)) {
+      sticker_filter_->SetOffset(0.0f, sticker_offset_y_);
+    }
   }
 
   ImGui::End();
@@ -476,6 +509,7 @@ void RenderFrame() {
     lipstick_filter_->SetFaceLandmarks(landmarks);
     blusher_filter_->SetFaceLandmarks(landmarks);
     reshape_filter_->SetFaceLandmarks(landmarks);
+    sticker_filter_->SetFaceLandmarks(landmarks);
   }
 #endif
 
