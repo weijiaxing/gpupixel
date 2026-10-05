@@ -11,6 +11,7 @@
 #include "gpupixel/source/source_image.h"
 
 #include <chrono>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -112,6 +113,7 @@ class GPUPIXEL_API FaceStickerFilter : public Filter {
 
   // Sticker items
   std::vector<StickerItem> stickers_;
+  mutable std::mutex sticker_mutex_;
 };
 
 }  // namespace gpupixel

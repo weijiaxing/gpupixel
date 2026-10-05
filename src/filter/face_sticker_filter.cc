@@ -135,16 +135,26 @@ bool FaceStickerFilter::Init() {
   RegisterProperty("offset_x", 0.0f,
                    "Horizontal offset relative to eye distance.",
                    [this](float& val) {
-                     float cur_y =
-                         stickers_.empty() ? 0.0f : stickers_[0].offset_y;
+                     float cur_y = 0.0f;
+                     {
+                       std::lock_guard<std::mutex> lock(sticker_mutex_);
+                       if (!stickers_.empty()) {
+                         cur_y = stickers_[0].offset_y;
+                       }
+                     }
                      SetOffset(val, cur_y);
                    });
 
   RegisterProperty("offset_y", 0.0f,
                    "Vertical offset relative to eye distance.",
                    [this](float& val) {
-                     float cur_x =
-                         stickers_.empty() ? 0.0f : stickers_[0].offset_x;
+                     float cur_x = 0.0f;
+                     {
+                       std::lock_guard<std::mutex> lock(sticker_mutex_);
+                       if (!stickers_.empty()) {
+                         cur_x = stickers_[0].offset_x;
+                       }
+                     }
                      SetOffset(cur_x, val);
                    });
 
@@ -153,6 +163,7 @@ bool FaceStickerFilter::Init() {
 
   RegisterProperty("fps", 15, "Animation frame rate (frames per second).",
                    [this](int& val) {
+                     std::lock_guard<std::mutex> lock(sticker_mutex_);
                      if (!stickers_.empty()) {
                        stickers_[0].fps = val;
                      }
@@ -162,6 +173,7 @@ bool FaceStickerFilter::Init() {
 }
 
 void FaceStickerFilter::SetFaceLandmarks(const std::vector<float>& landmarks) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   if (landmarks.empty()) {
     has_face_ = false;
     face_landmarks_.clear();
@@ -172,17 +184,33 @@ void FaceStickerFilter::SetFaceLandmarks(const std::vector<float>& landmarks) {
 }
 
 void FaceStickerFilter::SetStickerPath(const std::string& path) {
-  if (path.empty()) return;
-  if (fs::exists(path) && fs::is_directory(path)) {
+  if (path.empty()) {
+    std::vector<std::shared_ptr<SourceImage>> old_frames;
+    {
+      std::lock_guard<std::mutex> lock(sticker_mutex_);
+      if (!stickers_.empty()) {
+        old_frames = std::move(stickers_[0].frames);
+      }
+    }
+    return;
+  }
+  std::error_code ec;
+  if (fs::exists(path, ec) && fs::is_directory(path, ec)) {
     std::vector<std::string> frame_paths;
-    for (const auto& entry : fs::directory_iterator(path)) {
+    for (const auto& entry : fs::directory_iterator(path, ec)) {
       if (entry.path().extension() == ".png") {
         frame_paths.push_back(entry.path().string());
       }
     }
     std::sort(frame_paths.begin(), frame_paths.end());
     if (!frame_paths.empty()) {
-      int fps = stickers_.empty() ? 15 : stickers_[0].fps;
+      int fps = 15;
+      {
+        std::lock_guard<std::mutex> lock(sticker_mutex_);
+        if (!stickers_.empty()) {
+          fps = stickers_[0].fps;
+        }
+      }
       SetStickerFrames(frame_paths, fps);
       return;
     }
@@ -192,115 +220,151 @@ void FaceStickerFilter::SetStickerPath(const std::string& path) {
 }
 
 void FaceStickerFilter::SetStickerImage(std::shared_ptr<SourceImage> image) {
-  if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
-  }
-  stickers_[0].frames.clear();
-  if (image) {
-    stickers_[0].frames.push_back(image);
+  std::vector<std::shared_ptr<SourceImage>> old_frames;
+  {
+    std::lock_guard<std::mutex> lock(sticker_mutex_);
+    if (stickers_.empty()) {
+      stickers_.push_back(StickerItem());
+    }
+    old_frames = std::move(stickers_[0].frames);
+    if (image) {
+      stickers_[0].frames.push_back(image);
+    }
+    stickers_[0].start_time_ms = 0;
   }
 }
 
 void FaceStickerFilter::SetStickerFrames(
     const std::vector<std::string>& frame_paths,
     int fps) {
-  if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
-  }
-  stickers_[0].frames.clear();
-  stickers_[0].fps = fps;
-  stickers_[0].start_time_ms = 0;
+  // Preload new images outside the lock so GL render thread is not blocked
+  std::vector<std::shared_ptr<SourceImage>> new_frames;
+  new_frames.reserve(frame_paths.size());
   for (const auto& path : frame_paths) {
     auto img = SourceImage::Create(path);
     if (img) {
-      stickers_[0].frames.push_back(img);
+      new_frames.push_back(img);
     }
   }
+
+  int64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count();
+
+  std::vector<std::shared_ptr<SourceImage>> old_frames;
+  {
+    std::lock_guard<std::mutex> lock(sticker_mutex_);
+    if (stickers_.empty()) {
+      stickers_.push_back(StickerItem());
+    }
+    old_frames = std::move(stickers_[0].frames);
+    stickers_[0].frames = std::move(new_frames);
+    stickers_[0].fps = fps;
+    stickers_[0].start_time_ms = now;
+  }
+  // old_frames destroyed safely outside the lock
 }
 
 void FaceStickerFilter::SetStickerFrames(
     const std::vector<std::shared_ptr<SourceImage>>& frames,
     int fps) {
-  if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
+  int64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count();
+  std::vector<std::shared_ptr<SourceImage>> old_frames;
+  {
+    std::lock_guard<std::mutex> lock(sticker_mutex_);
+    if (stickers_.empty()) {
+      stickers_.push_back(StickerItem());
+    }
+    old_frames = std::move(stickers_[0].frames);
+    stickers_[0].frames = frames;
+    stickers_[0].fps = fps;
+    stickers_[0].start_time_ms = now;
   }
-  stickers_[0].frames = frames;
-  stickers_[0].fps = fps;
-  stickers_[0].start_time_ms = 0;
 }
 
 void FaceStickerFilter::SetAnchor(StickerAnchor anchor) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
+    stickers_.push_back(StickerItem());
   }
   stickers_[0].anchor = anchor;
 }
 
 void FaceStickerFilter::SetScale(float scale) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
+    stickers_.push_back(StickerItem());
   }
   stickers_[0].scale = scale;
 }
 
 void FaceStickerFilter::SetOffset(float offset_x, float offset_y) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
+    stickers_.push_back(StickerItem());
   }
   stickers_[0].offset_x = offset_x;
   stickers_[0].offset_y = offset_y;
 }
 
 void FaceStickerFilter::SetRotationOffset(float degrees) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
+    stickers_.push_back(StickerItem());
   }
   stickers_[0].rotation_offset_deg = degrees;
 }
 
 void FaceStickerFilter::SetAlpha(float alpha) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
+    stickers_.push_back(StickerItem());
   }
   stickers_[0].alpha = alpha;
 }
 
 void FaceStickerFilter::SetFlipY(bool flip_y) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   if (stickers_.empty()) {
-    StickerItem item;
-    stickers_.push_back(item);
+    stickers_.push_back(StickerItem());
   }
   stickers_[0].flip_y = flip_y;
 }
 
 int FaceStickerFilter::AddSticker(const StickerItem& item) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   stickers_.push_back(item);
   return static_cast<int>(stickers_.size()) - 1;
 }
 
 void FaceStickerFilter::RemoveSticker(int index) {
-  if (index >= 0 && index < static_cast<int>(stickers_.size())) {
-    stickers_.erase(stickers_.begin() + index);
+  StickerItem removed_item;
+  {
+    std::lock_guard<std::mutex> lock(sticker_mutex_);
+    if (index >= 0 && index < static_cast<int>(stickers_.size())) {
+      removed_item = std::move(stickers_[index]);
+      stickers_.erase(stickers_.begin() + index);
+    }
   }
 }
 
 void FaceStickerFilter::ClearStickers() {
-  stickers_.clear();
+  std::vector<StickerItem> old_stickers;
+  {
+    std::lock_guard<std::mutex> lock(sticker_mutex_);
+    old_stickers = std::move(stickers_);
+  }
 }
 
 size_t FaceStickerFilter::GetStickerCount() const {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   return stickers_.size();
 }
 
 StickerItem* FaceStickerFilter::GetSticker(int index) {
+  std::lock_guard<std::mutex> lock(sticker_mutex_);
   if (index >= 0 && index < static_cast<int>(stickers_.size())) {
     return &stickers_[index];
   }
@@ -333,8 +397,20 @@ bool FaceStickerFilter::DoRender(bool update_sinks) {
                                 GetTextureCoordinate(NoRotation)));
   GL_CALL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
-  // 2. Render stickers if face is detected
-  if (has_face_ && !stickers_.empty() && face_landmarks_.size() >= 212) {
+  // 2. Render stickers if face is detected (thread-safe snapshot)
+  std::vector<StickerItem> active_stickers;
+  std::vector<float> active_landmarks;
+  bool render_stickers = false;
+  {
+    std::lock_guard<std::mutex> lock(sticker_mutex_);
+    if (has_face_ && !stickers_.empty() && face_landmarks_.size() >= 212) {
+      active_stickers = stickers_;
+      active_landmarks = face_landmarks_;
+      render_stickers = true;
+    }
+  }
+
+  if (render_stickers) {
     GPUPixelContext::GetInstance()->SetActiveGlProgram(filter_program_);
     GL_CALL(glEnable(GL_BLEND));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -342,11 +418,11 @@ bool FaceStickerFilter::DoRender(bool update_sinks) {
     int fb_width = framebuffer_->GetWidth();
     int fb_height = framebuffer_->GetHeight();
 
-    size_t face_count = face_landmarks_.size() / 212;
+    size_t face_count = active_landmarks.size() / 212;
     for (size_t f = 0; f < face_count; ++f) {
       size_t face_offset = f * 212;
-      for (const auto& item : stickers_) {
-        RenderStickerItem(item, face_landmarks_, face_offset, fb_width,
+      for (const auto& item : active_stickers) {
+        RenderStickerItem(item, active_landmarks, face_offset, fb_width,
                           fb_height);
       }
     }
@@ -374,19 +450,26 @@ void FaceStickerFilter::RenderStickerItem(
     int64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
                       std::chrono::steady_clock::now().time_since_epoch())
                       .count();
-    int64_t start_time = item.start_time_ms;
-    if (start_time == 0) {
-      start_time = now;
-    }
-    int64_t elapsed = now - start_time;
     int frame_dur = 1000 / item.fps;
     if (frame_dur <= 0) frame_dur = 40;
+
+    int64_t elapsed = 0;
+    if (item.start_time_ms > 0) {
+      elapsed = std::max<int64_t>(0, now - item.start_time_ms);
+    } else {
+      elapsed = now;
+    }
+
     if (item.loop) {
       frame_index = (elapsed / frame_dur) % item.frames.size();
     } else {
       frame_index =
           std::min((size_t)(elapsed / frame_dur), item.frames.size() - 1);
     }
+  }
+
+  if (frame_index >= item.frames.size()) {
+    frame_index = 0;
   }
 
   auto current_frame = item.frames[frame_index];
