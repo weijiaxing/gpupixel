@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    namespace 'com.pixpark.gpupixel'
     compileSdk 31
 
     defaultConfig {

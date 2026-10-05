@@ -7,4 +7,14 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Camera Theme Colors -->
+    <color name="camera_accent">#FF5376</color>
+    <color name="camera_accent_light">#33FF5376</color>
+    <color name="camera_panel_bg">#CC121214</color>
+    <color name="camera_bar_bg">#55000000</color>
+    <color name="camera_item_bg">#26FFFFFF</color>
+    <color name="camera_item_selected_bg">#33FF5376</color>
+    <color name="camera_text_primary">#FFFFFFFF</color>
+    <color name="camera_text_secondary">#99FFFFFF</color>
 </resources>

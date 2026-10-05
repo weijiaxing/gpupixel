@@ -48,7 +48,7 @@ public class Camera2Helper {
     private FrameCallback mFrameCallback;
     
     // Camera facing (front or back)
-    private int mCameraFacing = CameraCharacteristics.LENS_FACING_BACK;
+    private int mCameraFacing = CameraCharacteristics.LENS_FACING_FRONT;
     private String mCameraId;
     private CameraManager mCameraManager;
     private CaptureRequest.Builder mCaptureRequestBuilder;
@@ -59,7 +59,8 @@ public class Camera2Helper {
     // Mirror state - controls whether front camera preview should be mirrored
     private boolean mMirrorEnabled = true;  // Default to true for front camera mirroring
 
-    private boolean mIsCameraOpened = false;
+    private volatile boolean mIsCameraOpened = false;
+    private volatile boolean mIsCameraOpening = false;
 
     public interface FrameCallback {
         void onFrameAvailable(byte[] rgbaData, int width, int height);
@@ -73,12 +74,18 @@ public class Camera2Helper {
         mFrameCallback = callback;
     }
 
-    public void startCamera() {
+    public synchronized void startCamera() {
+        if (mIsCameraOpened || mIsCameraOpening) {
+            Log.d(TAG, "Camera is already opened or opening, ignoring duplicate startCamera");
+            return;
+        }
+        mIsCameraOpening = true;
         startBackgroundThread();
         openCamera();
     }
 
-    public void stopCamera() {
+    public synchronized void stopCamera() {
+        mIsCameraOpening = false;
         closeCamera();
         stopBackgroundThread();
     }
@@ -145,8 +152,12 @@ public class Camera2Helper {
                 mFlashlightEnabled = false;
             }
 
-            // Choose optimal preview size
-            mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), 1280, 720);
+            // Choose optimal preview size for YUV_420_888
+            Size[] yuvSizes = map.getOutputSizes(ImageFormat.YUV_420_888);
+            if (yuvSizes == null || yuvSizes.length == 0) {
+                yuvSizes = map.getOutputSizes(SurfaceTexture.class);
+            }
+            mPreviewSize = chooseOptimalSize(yuvSizes, 1280, 720);
             Log.d(TAG, "Preview size: " + mPreviewSize + " sensor orientation: " + mSensorOrientation);
             // Set up ImageReader to handle preview frames
             mImageReader = ImageReader.newInstance(
@@ -214,8 +225,9 @@ public class Camera2Helper {
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
-            createCaptureSession();
+            mIsCameraOpening = false;
             mIsCameraOpened = true;
+            createCaptureSession();
         }
 
         @Override
@@ -224,6 +236,7 @@ public class Camera2Helper {
             cameraDevice.close();
             mCameraDevice = null;
             mIsCameraOpened = false;
+            mIsCameraOpening = false;
         }
 
         @Override
@@ -232,6 +245,7 @@ public class Camera2Helper {
             cameraDevice.close();
             mCameraDevice = null;
             mIsCameraOpened = false;
+            mIsCameraOpening = false;
             Log.e(TAG, "Camera device error: " + error);
         }
     };
@@ -256,26 +270,52 @@ public class Camera2Helper {
 
                             mCaptureSession = cameraCaptureSession;
                             try {
-                                // Auto focus
-                                mCaptureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                                
-                                // Auto exposure and flash mode
+                                // Auto focus: check supported modes safely
+                                CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(mCameraId);
+                                int[] afModes = characteristics.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
+                                boolean supportsContinuous = false;
+                                if (afModes != null) {
+                                    for (int mode : afModes) {
+                                        if (mode == CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE) {
+                                            supportsContinuous = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (supportsContinuous) {
+                                    mCaptureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+                                } else {
+                                    mCaptureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                                            CaptureRequest.CONTROL_AF_MODE_AUTO);
+                                }
+
+                                // Auto exposure: CONTROL_AE_MODE_ON is universally supported across all devices
+                                mCaptureRequestBuilder.set(CaptureRequest.CONTROL_MODE,
+                                        CaptureRequest.CONTROL_MODE_AUTO);
+                                mCaptureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                        CaptureRequest.CONTROL_AE_MODE_ON);
+
                                 if (mFlashlightEnabled && mCameraFacing == CameraCharacteristics.LENS_FACING_BACK) {
-                                    mCaptureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                            CaptureRequest.CONTROL_AE_MODE_ON);
                                     mCaptureRequestBuilder.set(CaptureRequest.FLASH_MODE,
                                             CaptureRequest.FLASH_MODE_TORCH);
                                 } else {
-                                    mCaptureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                            CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+                                    mCaptureRequestBuilder.set(CaptureRequest.FLASH_MODE,
+                                            CaptureRequest.FLASH_MODE_OFF);
                                 }
 
-                                // Start preview
-                                CaptureRequest request = mCaptureRequestBuilder.build();
-                                mCaptureSession.setRepeatingRequest(
-                                        request, null, mBackgroundHandler);
-                            } catch (CameraAccessException e) {
+                                // Start preview with fallback
+                                try {
+                                    CaptureRequest request = mCaptureRequestBuilder.build();
+                                    mCaptureSession.setRepeatingRequest(
+                                            request, null, mBackgroundHandler);
+                                } catch (Exception ex) {
+                                    Log.e(TAG, "Standard repeating request failed, retrying with minimal preview request", ex);
+                                    CaptureRequest.Builder fallback = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                                    fallback.addTarget(surface);
+                                    mCaptureSession.setRepeatingRequest(fallback.build(), null, mBackgroundHandler);
+                                }
+                            } catch (Exception e) {
                                 Log.e(TAG, "Failed to set up capture request", e);
                             }
                         }
@@ -312,6 +352,7 @@ public class Camera2Helper {
 
             mCaptureRequestBuilder = null;
             mIsCameraOpened = false;
+            mIsCameraOpening = false;
         } catch (InterruptedException e) {
             Log.e(TAG, "Interrupted while trying to lock camera closing", e);
         } finally {
@@ -411,7 +452,7 @@ public class Camera2Helper {
             } else {
                 // Turn off flashlight
                 mCaptureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+                        CaptureRequest.CONTROL_AE_MODE_ON);
                 mCaptureRequestBuilder.set(CaptureRequest.FLASH_MODE,
                         CaptureRequest.FLASH_MODE_OFF);
                 Log.d(TAG, "Flashlight turned OFF");

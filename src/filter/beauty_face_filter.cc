@@ -52,6 +52,10 @@ bool BeautyFaceFilter::Init() {
   RegisterProperty("skin_smoothing", 0,
                    "The smoothing of filter with range between -1 and 1.",
                    [this](float& val) { SetBlurAlpha(val); });
+
+  RegisterProperty("sharpen", 0,
+                   "The sharpen of filter with range between 0 and 1.",
+                   [this](float& val) { SetSharpen(val); });
   return true;
 }
 

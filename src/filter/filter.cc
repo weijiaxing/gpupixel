@@ -23,40 +23,40 @@ init_filter_factory() {
   factory["BlusherFilter"] = BlusherFilter::Create;
   factory["FaceMakeupFilter"] = FaceMakeupFilter::Create;
 
-  // // Basic adjustment filters
-  // factory["ContrastFilter"] = ContrastFilter::Create;
-  // factory["ExposureFilter"] = ExposureFilter::Create;
-  // factory["SaturationFilter"] = SaturationFilter::Create;
-  // factory["RGBFilter"] = RGBFilter::Create;
-  // factory["HueFilter"] = HueFilter::Create;
-  // factory["HSBFilter"] = HSBFilter::Create;
-  // factory["ColorInvertFilter"] = ColorInvertFilter::Create;
-  // factory["WhiteBalanceFilter"] = WhiteBalanceFilter::Create;
-  // factory["ColorMatrixFilter"] = ColorMatrixFilter::Create;
+  // Basic adjustment filters
+  factory["ContrastFilter"] = ContrastFilter::Create;
+  factory["ExposureFilter"] = ExposureFilter::Create;
+  factory["SaturationFilter"] = SaturationFilter::Create;
+  factory["RGBFilter"] = RGBFilter::Create;
+  factory["HueFilter"] = HueFilter::Create;
+  factory["HSBFilter"] = HSBFilter::Create;
+  factory["ColorInvertFilter"] = ColorInvertFilter::Create;
+  factory["WhiteBalanceFilter"] = WhiteBalanceFilter::Create;
+  factory["ColorMatrixFilter"] = ColorMatrixFilter::Create;
 
-  // // Blur filters
-  // factory["IOSBlurFilter"] = IOSBlurFilter::Create;
-  // factory["BilateralFilter"] = BilateralFilter::Create;
+  // Blur filters
+  factory["IOSBlurFilter"] = IOSBlurFilter::Create;
+  factory["BilateralFilter"] = BilateralFilter::Create;
 
-  // // Edge detection filters
-  // factory["SobelEdgeDetectionFilter"] = SobelEdgeDetectionFilter::Create;
-  // factory["CannyEdgeDetectionFilter"] = CannyEdgeDetectionFilter::Create;
-  // factory["DirectionalNonMaximumSuppressionFilter"] =
-  //     DirectionalNonMaximumSuppressionFilter::Create;
-  // factory["WeakPixelInclusionFilter"] = WeakPixelInclusionFilter::Create;
+  // Edge detection filters
+  factory["SobelEdgeDetectionFilter"] = SobelEdgeDetectionFilter::Create;
+  factory["CannyEdgeDetectionFilter"] = CannyEdgeDetectionFilter::Create;
+  factory["DirectionalNonMaximumSuppressionFilter"] =
+      DirectionalNonMaximumSuppressionFilter::Create;
+  factory["WeakPixelInclusionFilter"] = WeakPixelInclusionFilter::Create;
 
-  // // Special effect filters
-  // factory["ToonFilter"] = ToonFilter::Create;
-  // factory["SmoothToonFilter"] = SmoothToonFilter::Create;
-  // factory["PosterizeFilter"] = PosterizeFilter::Create;
-  // factory["PixellationFilter"] = PixellationFilter::Create;
-  // factory["SketchFilter"] = SketchFilter::Create;
-  // factory["GlassSphereFilter"] = GlassSphereFilter::Create;
-  // factory["SphereRefractionFilter"] = SphereRefractionFilter::Create;
-  // factory["EmbossFilter"] = EmbossFilter::Create;
+  // Special effect filters
+  factory["ToonFilter"] = ToonFilter::Create;
+  factory["SmoothToonFilter"] = SmoothToonFilter::Create;
+  factory["PosterizeFilter"] = PosterizeFilter::Create;
+  factory["PixellationFilter"] = PixellationFilter::Create;
+  factory["SketchFilter"] = SketchFilter::Create;
+  factory["GlassSphereFilter"] = GlassSphereFilter::Create;
+  factory["SphereRefractionFilter"] = SphereRefractionFilter::Create;
+  factory["EmbossFilter"] = EmbossFilter::Create;
 
-  // // Image processing filters
-  // factory["LuminanceRangeFilter"] = LuminanceRangeFilter::Create;
+  // Image processing filters
+  factory["LuminanceRangeFilter"] = LuminanceRangeFilter::Create;
 
   return factory;
 }

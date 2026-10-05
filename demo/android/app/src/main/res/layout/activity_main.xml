@@ -4,145 +4,243 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".MainActivity">
 
+    <!-- Camera Preview -->
     <TextureView
         android:id="@+id/textureView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <FrameLayout
-        android:id="@+id/fl_preview"
+    <!-- Top Bar -->
+    <RelativeLayout
+        android:id="@+id/top_bar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
-    <Button
-        android:id="@+id/btn_switch"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:paddingStart="20dp"
+        android:paddingTop="44dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="12dp">
+
+        <ImageButton
+            android:id="@+id/btn_switch"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_alignParentStart="true"
+            android:background="@drawable/bg_circle_icon_button"
+            android:contentDescription="Switch Camera"
+            android:src="@drawable/ic_switch_camera" />
+
+        <ImageButton
+            android:id="@+id/btn_flash"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="16dp"
+            android:layout_toEndOf="@id/btn_switch"
+            android:background="@drawable/bg_circle_icon_button"
+            android:contentDescription="Flashlight"
+            android:src="@drawable/ic_flash_off" />
+
+        <LinearLayout
+            android:id="@+id/btn_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_pill_button"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_reset" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="重置"
+                android:textColor="@color/white"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Compare Button (Long press to see original) -->
+    <LinearLayout
+        android:id="@+id/btn_compare"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:layout_above="@id/bottom_panel"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_pill_button"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingEnd="16dp">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_compare" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="按住对比"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Face Status Indicator -->
+    <TextView
+        android:id="@+id/tv_face_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="switch"/>
-    <Button
-        android:id="@+id/btn_flash"
-        android:layout_width="wrap_content"
+        android:layout_above="@id/bottom_panel"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="22dp"
+        android:background="@drawable/bg_pill_button"
+        android:paddingStart="12dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="4dp"
+        android:text="人脸检测中..."
+        android:textColor="@color/camera_text_secondary"
+        android:textSize="11sp" />
+
+    <!-- Bottom Panel Container -->
+    <LinearLayout
+        android:id="@+id/bottom_panel"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="falsh"
-        android:layout_marginStart="16dp"
-        android:layout_toEndOf="@id/btn_switch"/>
-
-    <Button
-        android:id="@+id/btn_capture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="capture"
-        android:layout_marginStart="16dp"
-        android:layout_toEndOf="@id/btn_flash"/>
-    <TextView
-        android:id="@+id/mopi"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:text="smooth"
-        android:textColor="@color/white"
         android:layout_alignParentBottom="true"
-        android:layout_marginLeft="20dp"
-        android:layout_marginBottom="200dp" />
+        android:background="@drawable/bg_bottom_panel"
+        android:orientation="vertical"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp">
 
-    <SeekBar
-        android:id="@+id/smooth_seekbar"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="190dp"
-        android:layout_marginLeft="20dp"
-        android:max="10"
-        android:progress="0" />
+        <!-- Active Slider Row -->
+        <LinearLayout
+            android:id="@+id/layout_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="10dp">
 
-    <!--white-->
-    <TextView
-        android:id="@+id/skin_white"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:text="white"
-        android:textColor="@color/white"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="20dp"
-        android:layout_marginBottom="160dp" />
+            <TextView
+                android:id="@+id/tv_slider_label"
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="磨皮"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
-    <SeekBar
-        android:id="@+id/whiteness_seekbar"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="150dp"
-        android:layout_marginLeft="20dp"
-        android:max="10"
-        android:progress="0" />
+            <SeekBar
+                android:id="@+id/active_seekbar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/bg_seekbar_track"
+                android:thumb="@drawable/bg_seekbar_thumb" />
 
-    <!--thinface-->
-    <TextView
-        android:id="@+id/thinface"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:text="thinface"
-        android:textColor="@color/white"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="20dp"
-        android:layout_marginBottom="120dp" />
+            <TextView
+                android:id="@+id/tv_slider_value"
+                android:layout_width="44dp"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:text="0%"
+                android:textColor="@color/camera_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
-    <SeekBar
-        android:id="@+id/thinfaceSeekbar"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="110dp"
-        android:layout_marginLeft="20dp"
-        android:max="10"
-        android:progress="0" />
+        <!-- Horizontal Beauty Items List -->
+        <HorizontalScrollView
+            android:id="@+id/scroll_items"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
-    <!--big eye-->
-    <TextView
-        android:id="@+id/bigeye"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:text="big eye"
-        android:textColor="@color/white"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="20dp"
-        android:layout_marginBottom="80dp" />
+            <LinearLayout
+                android:id="@+id/layout_items_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="10dp" />
+        </HorizontalScrollView>
 
-    <SeekBar
-        android:id="@+id/bigeyeSeekbar"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="70dp"
-        android:layout_marginLeft="20dp"
-        android:max="10"
-        android:progress="0" />
+        <!-- Category Tabs (美肤 / 美型 / 美妆 / 滤镜) -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@android:color/transparent"
+            app:tabGravity="center"
+            app:tabIndicatorColor="@color/camera_accent"
+            app:tabIndicatorFullWidth="false"
+            app:tabIndicatorHeight="2.5dp"
+            app:tabMode="fixed"
+            app:tabRippleColor="@null"
+            app:tabSelectedTextColor="@color/white"
+            app:tabTextAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            app:tabTextColor="@color/camera_text_secondary" />
 
-    <!--lipstick-->
-    <TextView
-        android:id="@+id/lipstick"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:text="lipstick"
-        android:textColor="@color/white"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="20dp"
-        android:layout_marginBottom="40dp" />
+        <!-- Shutter Row -->
+        <RelativeLayout
+            android:id="@+id/layout_shutter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp">
 
-    <SeekBar
-        android:id="@+id/lipstickSeekbar"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="30dp"
-        android:layout_marginLeft="20dp"
-        android:max="10"
-        android:progress="0" />
+            <!-- Panel Collapse / Expand Button -->
+            <ImageButton
+                android:id="@+id/btn_toggle_panel"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_circle_icon_button"
+                android:contentDescription="Toggle Panel"
+                android:src="@drawable/ic_beauty_wand" />
+
+            <!-- Capture Shutter Button -->
+            <FrameLayout
+                android:id="@+id/btn_capture"
+                android:layout_width="74dp"
+                android:layout_height="74dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/bg_shutter_outer">
+
+                <View
+                    android:layout_width="58dp"
+                    android:layout_height="58dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_shutter_inner" />
+            </FrameLayout>
+        </RelativeLayout>
+    </LinearLayout>
 
 </RelativeLayout>

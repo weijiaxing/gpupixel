@@ -120,7 +120,8 @@ Java_com_pixpark_gpupixel_GPUPixelSinkSurface_nativeSetSurface(
 
   // If Surface is null, release native window
   if (surface == nullptr) {
-    (*ptr)->ReleaseNativeWindow();
+    GPUPixelContext::GetInstance()->SyncRunWithContext(
+        [&] { (*ptr)->ReleaseNativeWindow(); });
     return;
   }
 
@@ -132,7 +133,8 @@ Java_com_pixpark_gpupixel_GPUPixelSinkSurface_nativeSetSurface(
   }
 
   // Set native window, will create EGL Window Surface
-  (*ptr)->SetNativeWindow(native_window, width, height);
+  GPUPixelContext::GetInstance()->SyncRunWithContext(
+      [&] { (*ptr)->SetNativeWindow(native_window, width, height); });
 
   // Note: Don't release native_window here, as it's needed for rendering
   // native_window will be released in ReleaseNativeWindow()

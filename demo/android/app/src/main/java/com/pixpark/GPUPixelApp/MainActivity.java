@@ -3,65 +3,121 @@ package com.pixpark.GPUPixelApp;
 import static android.widget.Toast.LENGTH_LONG;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
-import android.view.TextureView;
+import android.hardware.camera2.CameraCharacteristics;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.tabs.TabLayout;
 import com.pixpark.GPUPixelApp.databinding.ActivityMainBinding;
+import com.pixpark.GPUPixelApp.databinding.ItemBeautyOptionBinding;
 import com.pixpark.gpupixel.FaceDetector;
 import com.pixpark.gpupixel.GPUPixel;
 import com.pixpark.gpupixel.GPUPixelFilter;
 import com.pixpark.gpupixel.GPUPixelSinkRawData;
 import com.pixpark.gpupixel.GPUPixelSinkSurface;
+import com.pixpark.gpupixel.GPUPixelSource;
 import com.pixpark.gpupixel.GPUPixelSourceRawData;
-import android.view.Surface;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 200;
-    private static final String TAG = "GPUPixelDemo";
+    private static final String TAG = "GPUPixelCamera";
 
-    Camera2Helper mCamera2Helper;
+    // Item category constants
+    private static final int CAT_SKIN = 0;    // 美肤
+    private static final int CAT_SHAPE = 1;   // 美型
+    private static final int CAT_MAKEUP = 2;  // 美妆
+    private static final int CAT_FILTER = 3;  // 滤镜
+
+    // Item ID constants
+    private static final int ID_SMOOTH = 1;
+    private static final int ID_WHITE = 2;
+    private static final int ID_SHARPEN = 3;
+    private static final int ID_THIN_FACE = 4;
+    private static final int ID_BIG_EYE = 5;
+    private static final int ID_LIPSTICK = 6;
+    private static final int ID_BLUSHER = 7;
+    private static final int ID_FILTER_ORIGIN = 8;
+    private static final int ID_FILTER_PINK = 9;
+    private static final int ID_FILTER_COOL = 10;
+    private static final int ID_FILTER_FILM = 11;
+    private static final int ID_FILTER_BW = 12;
+
+    public static class BeautyOption {
+        int id;
+        String name;
+        int iconRes;
+        int category;
+        int progress; // 0 - 100
+
+        BeautyOption(int id, String name, int iconRes, int category, int initialProgress) {
+            this.id = id;
+            this.name = name;
+            this.iconRes = iconRes;
+            this.category = category;
+            this.progress = initialProgress;
+        }
+    }
+
+    private final List<BeautyOption> mOptions = new ArrayList<>();
+    private BeautyOption mSelectedOption = null;
+    private int mSelectedFilterId = ID_FILTER_ORIGIN;
+
+    private Camera2Helper mCamera2Helper;
     private GPUPixelSourceRawData mSourceRawData;
+    private GPUPixelFilter mLipstickFilter;
+    private GPUPixelFilter mBlusherFilter;
     private GPUPixelFilter mBeautyFilter;
     private GPUPixelFilter mFaceReshapeFilter;
-    private GPUPixelFilter mLipstickFilter;
+    private GPUPixelFilter mWhiteBalanceFilter;
+    private GPUPixelFilter mSaturationFilter;
     private FaceDetector mFaceDetector;
     private GPUPixelSinkSurface mSinkSurface;
     private GPUPixelSinkRawData mCaptureSinkRawData;
 
-    private SeekBar mSmoothSeekbar;
-    private SeekBar mWhitenessSeekbar;
-    private SeekBar mThinFaceSeekbar;
-    private SeekBar mBigeyeSeekbar;
-    private SeekBar lipstickSeekbar;
     private TextureView mTextureView;
-
     private volatile boolean mCaptureRequested = false;
     private ExecutorService mCaptureExecutor;
-
     private ActivityMainBinding binding;
-    //    private CainCameraWrapper cainCameraWrapper;
-    // Memory buffer for taking pictures
     private ByteBuffer mTakePictureBuffer;
+
+    private boolean mHasFaceDetected = false;
+    private boolean mIsComparing = false;
+    private boolean mIsPanelCollapsed = false;
+
+    private SurfaceTexture mCachedSurfaceTexture;
+    private int mCachedSurfaceWidth = 0;
+    private int mCachedSurfaceHeight = 0;
+    private int mFrameCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,287 +125,480 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        long start = System.currentTimeMillis();
-        // Get log path
-        String path = getExternalFilesDir("gpupixel").getAbsolutePath();
-        Log.i(TAG, "Log path: " + path);
 
-        // Initialize GPUPixel
+        // Fullscreen & keep screen on
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        // Init GPUPixel C++ engine
         GPUPixel.Init(this);
         mCaptureExecutor = Executors.newSingleThreadExecutor();
 
-        // Asynchronously initialize face detector to avoid blocking main thread in setupCamera()
+        // Asynchronously init face detector to avoid freezing camera startup
         mCaptureExecutor.execute(() -> {
-            long fdStart = System.currentTimeMillis();
             mFaceDetector = FaceDetector.Create();
-            Log.i(TAG, "FaceDetector init time: " + (System.currentTimeMillis() - fdStart));
+            Log.i(TAG, "FaceDetector initialized successfully");
         });
 
-        // Keep screen on
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        // Initialize UI first (creates TextureView listener)
+        initBeautyOptions();
         initUI();
-
-        // Setup camera (which creates mSinkSurface and connects to TextureView)
-        // But wait for permission check first
-        // Check camera permission
         checkCameraPermission();
+    }
 
+    private void initBeautyOptions() {
+        // 美肤
+        mOptions.add(new BeautyOption(ID_SMOOTH, "磨皮", R.drawable.ic_skin_smooth, CAT_SKIN, 45));
+        mOptions.add(new BeautyOption(ID_WHITE, "美白", R.drawable.ic_skin_white, CAT_SKIN, 35));
+        mOptions.add(new BeautyOption(ID_SHARPEN, "清晰", R.drawable.ic_sharpen, CAT_SKIN, 25));
+
+        // 美型
+        mOptions.add(new BeautyOption(ID_THIN_FACE, "瘦脸", R.drawable.ic_thin_face, CAT_SHAPE, 30));
+        mOptions.add(new BeautyOption(ID_BIG_EYE, "大眼", R.drawable.ic_big_eye, CAT_SHAPE, 25));
+
+        // 美妆
+        mOptions.add(new BeautyOption(ID_LIPSTICK, "口红", R.drawable.ic_lipstick, CAT_MAKEUP, 25));
+        mOptions.add(new BeautyOption(ID_BLUSHER, "腮红", R.drawable.ic_blusher, CAT_MAKEUP, 20));
+
+        // 滤镜 (0% 表示原图效果，100% 表示满效果)
+        mOptions.add(new BeautyOption(ID_FILTER_ORIGIN, "原图", R.drawable.ic_filter, CAT_FILTER, 100));
+        mOptions.add(new BeautyOption(ID_FILTER_PINK, "粉嫩", R.drawable.ic_filter, CAT_FILTER, 100));
+        mOptions.add(new BeautyOption(ID_FILTER_COOL, "冷白", R.drawable.ic_filter, CAT_FILTER, 100));
+        mOptions.add(new BeautyOption(ID_FILTER_FILM, "胶片", R.drawable.ic_filter, CAT_FILTER, 100));
+        mOptions.add(new BeautyOption(ID_FILTER_BW, "黑白", R.drawable.ic_filter, CAT_FILTER, 100));
+
+        // Default selected option: 磨皮
+        mSelectedOption = mOptions.get(0);
+    }
+
+    private Surface mCurrentOutputSurface = null;
+
+    private synchronized void updateSinkSurfaceWindow(SurfaceTexture surfaceTexture, int width, int height) {
+        mCachedSurfaceTexture = surfaceTexture;
+        mCachedSurfaceWidth = width;
+        mCachedSurfaceHeight = height;
+        if (mSinkSurface != null && surfaceTexture != null && width > 0 && height > 0) {
+            if (mCurrentOutputSurface != null) {
+                mCurrentOutputSurface.release();
+            }
+            mCurrentOutputSurface = new Surface(surfaceTexture);
+            mSinkSurface.SetSurface(mCurrentOutputSurface, width, height);
+            Log.i(TAG, "updateSinkSurfaceWindow: SetSurface " + width + "x" + height);
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void initUI() {
+        mTextureView = binding.textureView;
+        mTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                updateSinkSurfaceWindow(surface, width, height);
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+                updateSinkSurfaceWindow(surface, width, height);
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                mCachedSurfaceTexture = null;
+                if (mCurrentOutputSurface != null) {
+                    mCurrentOutputSurface.release();
+                    mCurrentOutputSurface = null;
+                }
+                if (mSinkSurface != null) {
+                    mSinkSurface.ReleaseSurface();
+                }
+                return false;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+            }
+        });
+
+        // Top bar buttons
         binding.btnSwitch.setOnClickListener(v -> {
-            mCamera2Helper.switchCamera();
-            // Update mirror setting after switching camera
-            updateMirrorSetting();
+            if (mCamera2Helper != null) {
+                mCamera2Helper.switchCamera();
+                updateMirrorSetting();
+                updateFlashlightIcon();
+            }
         });
 
         binding.btnFlash.setOnClickListener(v -> {
-            mCamera2Helper.toggleFlashlight();
+            if (mCamera2Helper != null) {
+                mCamera2Helper.toggleFlashlight();
+                updateFlashlightIcon();
+            }
         });
 
-        binding.btnCapture.setOnClickListener(v -> requestCapture());
-        Log.i(TAG, "MainActivity onCreate: " + (System.currentTimeMillis() - start));
+        binding.btnReset.setOnClickListener(v -> resetAllBeautyParams());
 
+        // Compare button: long press to compare with original
+        binding.btnCompare.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    mIsComparing = true;
+                    applyCompareMode(true);
+                    binding.btnCompare.setBackgroundResource(R.drawable.bg_item_circle_selected);
+                    return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    mIsComparing = false;
+                    applyCompareMode(false);
+                    binding.btnCompare.setBackgroundResource(R.drawable.bg_pill_button);
+                    return true;
+            }
+            return false;
+        });
+
+        // Panel collapse/expand toggle
+        binding.btnTogglePanel.setOnClickListener(v -> {
+            mIsPanelCollapsed = !mIsPanelCollapsed;
+            int visibility = mIsPanelCollapsed ? View.GONE : View.VISIBLE;
+            binding.layoutSlider.setVisibility(visibility);
+            binding.scrollItems.setVisibility(visibility);
+            binding.tabLayout.setVisibility(visibility);
+        });
+
+        // Shutter capture button
+        binding.btnCapture.setOnClickListener(v -> requestCapture());
+
+        // Category Tabs
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("美肤"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("美型"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("美妆"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("滤镜"));
+
+        binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                refreshItemsForCategory(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
+
+        // Active Slider change listener
+        binding.activeSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (mSelectedOption != null && fromUser) {
+                    mSelectedOption.progress = progress;
+                    binding.tvSliderValue.setText(progress + "%");
+                    applyFilterParam(mSelectedOption);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        // Populate initial category: 美肤
+        refreshItemsForCategory(CAT_SKIN);
+    }
+
+    private void updateFlashlightIcon() {
+        if (mCamera2Helper != null && mCamera2Helper.isFlashlightEnabled()) {
+            binding.btnFlash.setImageResource(R.drawable.ic_flash_on);
+        } else {
+            binding.btnFlash.setImageResource(R.drawable.ic_flash_off);
+        }
     }
 
     /**
-     * Initialize UI components
-     * <p>
-     * Main tasks:
-     * 1. Get TextureView (used to display processed image)
-     * 2. Set SurfaceTextureListener, pass Surface to SinkSurface when Surface is available
+     * Render the horizontal items for the selected category
      */
-    private void initUI() {
-        // Try to get TextureView from binding, or find by ID
-        mTextureView = binding.textureView;
-        if (mTextureView == null) {
-            // If there's no textureView in layout, try to find or create
-            View rootView = binding.getRoot();
-            mTextureView = rootView.findViewById(android.R.id.text1); // You may need to modify this ID
-            if (mTextureView == null) {
-                // If still can't find, output warning
-                // You need to add a TextureView with id 'textureView' in layout XML
-                Log.w(TAG, "TextureView not found in layout. Please add a TextureView with id 'textureView'");
+    private void refreshItemsForCategory(int category) {
+        binding.layoutItemsContainer.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(this);
+
+        BeautyOption firstInCat = null;
+
+        for (BeautyOption option : mOptions) {
+            if (option.category != category) continue;
+            if (firstInCat == null) firstInCat = option;
+
+            ItemBeautyOptionBinding itemBinding = ItemBeautyOptionBinding.inflate(
+                    inflater, binding.layoutItemsContainer, false);
+
+            itemBinding.tvTitle.setText(option.name);
+            itemBinding.ivIcon.setImageResource(option.iconRes);
+
+            boolean isSelected;
+            if (category == CAT_FILTER) {
+                isSelected = (option.id == mSelectedFilterId);
+            } else {
+                isSelected = (mSelectedOption != null && mSelectedOption.id == option.id);
             }
+
+            updateItemSelectionVisual(itemBinding, isSelected);
+
+            itemBinding.itemRoot.setOnClickListener(v -> {
+                if (category == CAT_FILTER) {
+                    mSelectedFilterId = option.id;
+                    applyFilterPreset(mSelectedFilterId);
+                    refreshItemsForCategory(category);
+                } else {
+                    selectBeautyOption(option);
+                    refreshItemsForCategory(category);
+                }
+            });
+
+            binding.layoutItemsContainer.addView(itemBinding.getRoot());
         }
 
-        // Set SurfaceTexture listener
-        // This is key: when TextureView's Surface is available, pass it to SinkSurface for rendering
-        mTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
-            /**
-             * Called when Surface is first available
-             * At this time we can set Surface to SinkSurface, start rendering
-             */
-            @Override
-            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                if (mSinkSurface != null) {
-                    // Set Surface to SinkSurface, C layer will create EGL Window Surface
-                    mSinkSurface.SetSurface(new Surface(surface), width, height);
-                    Log.d(TAG, "TextureView surface available: " + width + "x" + height);
-                }
+        // If category changed and current selected option not in this category, select first
+        if (category != CAT_FILTER && (mSelectedOption == null || mSelectedOption.category != category)) {
+            if (firstInCat != null) {
+                selectBeautyOption(firstInCat);
             }
+        } else if (category == CAT_FILTER) {
+            // For filter tab, hide the slider
+            binding.layoutSlider.setVisibility(View.GONE);
+        } else {
+            binding.layoutSlider.setVisibility(View.VISIBLE);
+        }
+    }
 
-            /**
-             * Called when Surface size changes
-             * Need to re-set Surface (because size has changed)
-             */
-            @Override
-            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-                if (mSinkSurface != null) {
-                    // Re-set Surface, will update EGL Surface size
-                    mSinkSurface.SetSurface(new Surface(surface), width, height);
-                    Log.d(TAG, "TextureView surface size changed: " + width + "x" + height);
-                }
-            }
+    private void updateItemSelectionVisual(ItemBeautyOptionBinding itemBinding, boolean isSelected) {
+        if (isSelected) {
+            itemBinding.ivIconContainer.setBackgroundResource(R.drawable.bg_item_circle_selected);
+            itemBinding.tvTitle.setTextColor(ContextCompat.getColor(this, R.color.camera_accent));
+        } else {
+            itemBinding.ivIconContainer.setBackgroundResource(R.drawable.bg_item_circle);
+            itemBinding.tvTitle.setTextColor(ContextCompat.getColor(this, R.color.white));
+        }
+    }
 
-            /**
-             * Called when Surface is destroyed
-             * Need to release Surface resources in SinkSurface
-             */
-            @Override
-            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-                if (mSinkSurface != null) {
-                    // Release Surface resources, destroy EGL Window Surface
-                    mSinkSurface.ReleaseSurface();
-                }
-                return false; // false means we release resources ourselves, don't need TextureView to delay destruction
-            }
+    private void selectBeautyOption(BeautyOption option) {
+        mSelectedOption = option;
+        binding.layoutSlider.setVisibility(View.VISIBLE);
+        binding.tvSliderLabel.setText(option.name);
+        binding.activeSeekbar.setProgress(option.progress);
+        binding.tvSliderValue.setText(option.progress + "%");
+    }
 
-            /**
-             * Called when Surface content is updated
-             * No operations needed here, because rendering is controlled by SinkSurface in C layer
-             */
-            @Override
-            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-                // Texture updated, no operation needed (rendering controlled by C layer)
-            }
-        });
+    /**
+     * Apply single beauty parameter to native filters
+     */
+    private void applyFilterParam(BeautyOption option) {
+        if (mIsComparing) return;
 
-        // Setup beauty slider
-        mSmoothSeekbar = binding.smoothSeekbar;
-        mSmoothSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        float ratio = option.progress / 100.0f;
+        switch (option.id) {
+            case ID_SMOOTH:
                 if (mBeautyFilter != null) {
-                    mBeautyFilter.SetProperty("skin_smoothing", progress / 10.0f);
+                    mBeautyFilter.SetProperty("skin_smoothing", ratio);
                 }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-
-        mWhitenessSeekbar = binding.whitenessSeekbar;
-        mWhitenessSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                break;
+            case ID_WHITE:
                 if (mBeautyFilter != null) {
-                    mBeautyFilter.SetProperty("whiteness", progress / 10.0f);
+                    mBeautyFilter.SetProperty("whiteness", ratio);
                 }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-
-        mThinFaceSeekbar = binding.thinfaceSeekbar;
-        mThinFaceSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                break;
+            case ID_SHARPEN:
+                if (mBeautyFilter != null) {
+                    mBeautyFilter.SetProperty("sharpen", ratio);
+                }
+                break;
+            case ID_THIN_FACE:
                 if (mFaceReshapeFilter != null) {
-                    mFaceReshapeFilter.SetProperty("thin_face", progress / 160.0f);
+                    // thin_face max delta ~0.08
+                    mFaceReshapeFilter.SetProperty("thin_face", ratio * 0.08f);
                 }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-        mBigeyeSeekbar = binding.bigeyeSeekbar;
-        mBigeyeSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                break;
+            case ID_BIG_EYE:
                 if (mFaceReshapeFilter != null) {
-                    mFaceReshapeFilter.SetProperty("big_eye", progress / 40.0f);
+                    // big_eye max delta ~0.35
+                    mFaceReshapeFilter.SetProperty("big_eye", ratio * 0.35f);
                 }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-        lipstickSeekbar = binding.lipstickSeekbar;
-        lipstickSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                break;
+            case ID_LIPSTICK:
                 if (mLipstickFilter != null) {
-                    mLipstickFilter.SetProperty("blend_level", progress / 10.0f);
+                    mLipstickFilter.SetProperty("blend_level", ratio * 0.8f);
                 }
-            }
+                break;
+            case ID_BLUSHER:
+                if (mBlusherFilter != null) {
+                    mBlusherFilter.SetProperty("blend_level", ratio * 0.7f);
+                }
+                break;
+        }
+    }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
+    /**
+     * Apply filter color tone preset
+     */
+    private void applyFilterPreset(int filterId) {
+        if (mWhiteBalanceFilter == null || mSaturationFilter == null) return;
+        if (mIsComparing) return;
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+        switch (filterId) {
+            case ID_FILTER_ORIGIN: // 原图标准
+                mWhiteBalanceFilter.SetProperty("temperature", 5000.0f);
+                mWhiteBalanceFilter.SetProperty("tint", 0.0f);
+                mSaturationFilter.SetProperty("saturation", 1.0f);
+                break;
+            case ID_FILTER_PINK: // 奶油粉嫩
+                mWhiteBalanceFilter.SetProperty("temperature", 5350.0f);
+                mWhiteBalanceFilter.SetProperty("tint", 6.0f);
+                mSaturationFilter.SetProperty("saturation", 1.15f);
+                break;
+            case ID_FILTER_COOL: // 冷白日系
+                mWhiteBalanceFilter.SetProperty("temperature", 4550.0f);
+                mWhiteBalanceFilter.SetProperty("tint", -4.0f);
+                mSaturationFilter.SetProperty("saturation", 0.95f);
+                break;
+            case ID_FILTER_FILM: // 胶片复古
+                mWhiteBalanceFilter.SetProperty("temperature", 5600.0f);
+                mWhiteBalanceFilter.SetProperty("tint", 8.0f);
+                mSaturationFilter.SetProperty("saturation", 1.18f);
+                break;
+            case ID_FILTER_BW: // 质感黑白
+                mWhiteBalanceFilter.SetProperty("temperature", 5000.0f);
+                mWhiteBalanceFilter.SetProperty("tint", 0.0f);
+                mSaturationFilter.SetProperty("saturation", 0.0f);
+                break;
+        }
+    }
+
+    /**
+     * Long-press compare mode: toggles between 0 effects and full active effects
+     */
+    private void applyCompareMode(boolean compareOriginal) {
+        if (compareOriginal) {
+            // Set all to 0
+            if (mBeautyFilter != null) {
+                mBeautyFilter.SetProperty("skin_smoothing", 0.0f);
+                mBeautyFilter.SetProperty("whiteness", 0.0f);
+                mBeautyFilter.SetProperty("sharpen", 0.0f);
             }
-        });
+            if (mFaceReshapeFilter != null) {
+                mFaceReshapeFilter.SetProperty("thin_face", 0.0f);
+                mFaceReshapeFilter.SetProperty("big_eye", 0.0f);
+            }
+            if (mLipstickFilter != null) {
+                mLipstickFilter.SetProperty("blend_level", 0.0f);
+            }
+            if (mBlusherFilter != null) {
+                mBlusherFilter.SetProperty("blend_level", 0.0f);
+            }
+            if (mWhiteBalanceFilter != null) {
+                mWhiteBalanceFilter.SetProperty("temperature", 5000.0f);
+                mWhiteBalanceFilter.SetProperty("tint", 0.0f);
+            }
+            if (mSaturationFilter != null) {
+                mSaturationFilter.SetProperty("saturation", 1.0f);
+            }
+        } else {
+            // Restore all current params
+            for (BeautyOption option : mOptions) {
+                applyFilterParam(option);
+            }
+            applyFilterPreset(mSelectedFilterId);
+        }
+    }
+
+    /**
+     * Reset all parameters to initial default clean state
+     */
+    private void resetAllBeautyParams() {
+        for (BeautyOption option : mOptions) {
+            option.progress = 0;
+        }
+        mSelectedFilterId = ID_FILTER_ORIGIN;
+
+        if (mSelectedOption != null) {
+            binding.activeSeekbar.setProgress(0);
+            binding.tvSliderValue.setText("0%");
+        }
+
+        applyCompareMode(true); // Sets all filters to 0
+        refreshItemsForCategory(binding.tabLayout.getSelectedTabPosition());
+        Toast.makeText(this, "✨ 已重置所有美颜参数", Toast.LENGTH_SHORT).show();
     }
 
     /**
      * Setup camera and GPUPixel processing chain
-     * <p>
-     * This is the initialization method for the entire image processing pipeline:
-     * 1. Create camera helper
-     * 2. Create data source (Source)
-     * 3. Create filter chain (Filters)
-     * 4. Create output (SinkSurface) - directly render to TextureView
-     * 5. Initialize face detection
-     * 6. Set camera frame callback
      */
     private void setupCamera() {
         long start = System.currentTimeMillis();
-        // Create and initialize camera (using Camera2 API)
         mCamera2Helper = new Camera2Helper(this);
 
-        // Create data source for GPUPixel processing chain
-        // SourceRawData is used to receive raw RGBA data
+        // Source Raw Data
         mSourceRawData = GPUPixelSourceRawData.Create();
 
-        // Create filters: lipstick filter -> beauty filter -> face reshaping filter
+        // Filters: Lipstick -> Blusher -> BeautyFace -> FaceReshape -> WhiteBalance -> Saturation
         mLipstickFilter = GPUPixelFilter.Create(GPUPixelFilter.LIPSTICK_FILTER);
+        mBlusherFilter = GPUPixelFilter.Create(GPUPixelFilter.BLUSHER_FILTER);
         mBeautyFilter = GPUPixelFilter.Create(GPUPixelFilter.BEAUTY_FACE_FILTER);
         mFaceReshapeFilter = GPUPixelFilter.Create(GPUPixelFilter.FACE_RESHAPE_FILTER);
+        mWhiteBalanceFilter = GPUPixelFilter.Create(GPUPixelFilter.WHITE_BALANCE_FILTER);
+        mSaturationFilter = GPUPixelFilter.Create(GPUPixelFilter.SATURATION_FILTER);
 
-        // Create output - use SinkSurface for direct rendering
-        // Note: must be created before setting camera callback
+        // Output SinkSurface
         mSinkSurface = GPUPixelSinkSurface.Create();
-        mSinkSurface.SetFillMode(GPUPixelSinkSurface.PRESERVE_ASPECT_RATIO);
+        mSinkSurface.SetFillMode(GPUPixelSinkSurface.PRESERVE_ASPECT_RATIO_AND_FILL);
 
-        // Mirror setting will be set after camera starts (in updateMirrorSetting)
-
-        // Create raw data output Sink, used for saving processed RGBA data when taking photos
+        // Photo capture Sink
         mCaptureSinkRawData = GPUPixelSinkRawData.Create();
 
-        // If TextureView is already available, set Surface immediately
-        // Otherwise will be set in TextureView's SurfaceTextureListener callback
-        if (mTextureView != null && mTextureView.isAvailable()) {
+        // Bind Surface to SinkSurface
+        if (mCachedSurfaceTexture != null && mCachedSurfaceWidth > 0 && mCachedSurfaceHeight > 0) {
+            updateSinkSurfaceWindow(mCachedSurfaceTexture, mCachedSurfaceWidth, mCachedSurfaceHeight);
+        } else if (mTextureView != null && mTextureView.isAvailable()) {
             SurfaceTexture surfaceTexture = mTextureView.getSurfaceTexture();
             if (surfaceTexture != null) {
-                int width = mTextureView.getWidth();
-                int height = mTextureView.getHeight();
-                if (width > 0 && height > 0) {
-                    Log.d(TAG, "setSurfaceTexture: " + width + "x" + height);
-                    mSinkSurface.SetSurface(new Surface(surfaceTexture), width, height);
-                }
+                int width = mTextureView.getWidth() > 0 ? mTextureView.getWidth() : 1080;
+                int height = mTextureView.getHeight() > 0 ? mTextureView.getHeight() : 2280;
+                updateSinkSurfaceWindow(surfaceTexture, width, height);
             }
         }
 
-        // Face detector initialized asynchronously in onCreate, not blocking here
+        mTextureView.post(() -> {
+            if (mTextureView.isAvailable()) {
+                SurfaceTexture st = mTextureView.getSurfaceTexture();
+                if (st != null && mTextureView.getWidth() > 0 && mTextureView.getHeight() > 0) {
+                    updateSinkSurfaceWindow(st, mTextureView.getWidth(), mTextureView.getHeight());
+                }
+            }
+        });
+
+        // Apply initial beauty params to filters
+        for (BeautyOption opt : mOptions) {
+            applyFilterParam(opt);
+        }
+        applyFilterPreset(mSelectedFilterId);
 
         // Set camera frame callback
-        // This callback will be called whenever camera generates a frame of data
         mCamera2Helper.setFrameCallback((rgbaData, width, height) -> {
-            // Get camera sensor orientation (different devices have different camera sensor orientations)
             int sensorOrientation = mCamera2Helper.getSensorOrientation();
-
-            // Check if it's front camera
             boolean isFrontCamera = GPUPixel.isFrontCamera(mCamera2Helper.getCameraFacing());
 
-            // Use GPUPixel to calculate required image rotation angle
-            // Considering device orientation, sensor orientation, and front/back camera
             int rotation = GPUPixel.calculateRotation(
                     MainActivity.this,
                     sensorOrientation,
                     isFrontCamera
             );
 
-            // Use GPUPixel to rotate RGBA data (C layer implementation, better performance)
             byte[] rotatedData = GPUPixel.rotateRgbaImage(rgbaData, width, height, rotation);
-
-            // After rotation width and height may be swapped (90 or 270 degree rotation)
             int outWidth = (rotation == 90 || rotation == 270) ? height : width;
             int outHeight = (rotation == 90 || rotation == 270) ? width : height;
 
-            // Perform face detection (using rotated data) - skip if detector not ready
+            // Face Landmark Detection
             float[] landmarks = null;
             if (mFaceDetector != null) {
                 landmarks = mFaceDetector.detect(rotatedData, outWidth, outHeight,
@@ -357,109 +606,138 @@ public class MainActivity extends AppCompatActivity {
                         FaceDetector.GPUPIXEL_FRAME_TYPE_RGBA);
             }
 
-            // If face detected, set landmark coordinates to filters
-            if (landmarks != null && landmarks.length > 0) {
-                mFaceReshapeFilter.SetProperty("face_landmark", landmarks);
-                mLipstickFilter.SetProperty("face_landmark", landmarks);
+            if (mFrameCount++ % 60 == 0) {
+                Log.d(TAG, "Frame: " + width + "x" + height + " rot: " + rotation + " face: " + (landmarks != null && landmarks.length > 0));
             }
 
-            // Pass rotated RGBA data into GPUPixel processing chain
-            // Processing flow: Source -> lipstick filter -> beauty filter -> face reshaping filter -> SinkSurface
-            // SinkSurface will render directly in C layer EGL environment to TextureView, no Java layer intervention needed
+            if (landmarks != null && landmarks.length > 0) {
+                if (mFaceReshapeFilter != null) mFaceReshapeFilter.SetProperty("face_landmark", landmarks);
+                if (mLipstickFilter != null) mLipstickFilter.SetProperty("face_landmark", landmarks);
+                if (mBlusherFilter != null) mBlusherFilter.SetProperty("face_landmark", landmarks);
+
+                if (!mHasFaceDetected) {
+                    mHasFaceDetected = true;
+                    runOnUiThread(() -> {
+                        binding.tvFaceStatus.setText("✨ 已识别人脸");
+                        binding.tvFaceStatus.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.camera_accent));
+                    });
+                }
+            } else {
+                if (mFaceReshapeFilter != null) mFaceReshapeFilter.SetProperty("face_landmark", new float[0]);
+                if (mLipstickFilter != null) mLipstickFilter.SetProperty("face_landmark", new float[0]);
+                if (mBlusherFilter != null) mBlusherFilter.SetProperty("face_landmark", new float[0]);
+
+                if (mHasFaceDetected) {
+                    mHasFaceDetected = false;
+                    runOnUiThread(() -> {
+                        binding.tvFaceStatus.setText("未检测到人脸");
+                        binding.tvFaceStatus.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.camera_text_secondary));
+                    });
+                }
+            }
+
+            // Process frame in GPUPixel C++ engine
             mSourceRawData.ProcessData(
                     rotatedData,
                     outWidth,
                     outHeight,
-                    outWidth * 4,  // Number of bytes per row (width * 4 bytes RGBA)
+                    outWidth * 4,
                     GPUPixelSourceRawData.FRAME_TYPE_RGBA
             );
 
-            // Note: No need to get processed RGBA data, no need for manual rendering
-            // SinkSurface will automatically complete rendering in C layer and swap buffers to display to screen
-
+            // Capture photo if requested
             if (mCaptureRequested && mCaptureSinkRawData != null) {
                 mCaptureRequested = false;
                 byte[] captureRgba = mCaptureSinkRawData.GetRgbaBuffer();
                 int captureWidth = mCaptureSinkRawData.GetWidth();
                 int captureHeight = mCaptureSinkRawData.GetHeight();
-                if (captureRgba != null
-                        && captureWidth > 0
-                        && captureHeight > 0
+                if (captureRgba != null && captureWidth > 0 && captureHeight > 0
                         && captureRgba.length >= captureWidth * captureHeight * 4) {
-//                    byte[] bufferCopy = captureRgba.clone();
-                    mCaptureExecutor.execute(
-                            () -> saveCapturedImage(captureRgba, captureWidth, captureHeight));
+                    mCaptureExecutor.execute(() -> saveCapturedImage(captureRgba, captureWidth, captureHeight));
                 } else {
-                    runOnUiThread(() ->
-                            Toast.makeText(MainActivity.this, "Photo capture failed, invalid data", Toast.LENGTH_SHORT)
-                                    .show());
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "拍照失败，数据无效", Toast.LENGTH_SHORT).show());
                 }
             }
         });
 
-        // Connect processing chain: data source -> filter1 -> filter2 -> filter3 -> output
-        // Data flow: SourceRawData -> LipstickFilter -> BeautyFilter -> FaceReshapeFilter -> SinkSurface
-        mSourceRawData.AddSink(mLipstickFilter);
-        mLipstickFilter.AddSink(mBeautyFilter);
-        mBeautyFilter.AddSink(mFaceReshapeFilter);
-        mFaceReshapeFilter.AddSink(mSinkSurface);
-        if (mCaptureSinkRawData != null) {
-            mFaceReshapeFilter.AddSink(mCaptureSinkRawData);
+        // Pipeline chain:
+        // Source -> (Lipstick) -> (Blusher) -> (BeautyFace) -> (FaceReshape) -> (WhiteBalance) -> (Saturation) -> SinkSurface
+        Log.i(TAG, "Connecting filter pipeline:");
+        Log.i(TAG, "Source: " + mSourceRawData.getSourceNativeClassID());
+        Log.i(TAG, "Lipstick: " + (mLipstickFilter != null ? mLipstickFilter.getNativeClassID() : 0));
+        Log.i(TAG, "Blusher: " + (mBlusherFilter != null ? mBlusherFilter.getNativeClassID() : 0));
+        Log.i(TAG, "BeautyFace: " + (mBeautyFilter != null ? mBeautyFilter.getNativeClassID() : 0));
+        Log.i(TAG, "FaceReshape: " + (mFaceReshapeFilter != null ? mFaceReshapeFilter.getNativeClassID() : 0));
+        Log.i(TAG, "WhiteBalance: " + (mWhiteBalanceFilter != null ? mWhiteBalanceFilter.getNativeClassID() : 0));
+        Log.i(TAG, "Saturation: " + (mSaturationFilter != null ? mSaturationFilter.getNativeClassID() : 0));
+        Log.i(TAG, "SinkSurface: " + (mSinkSurface != null ? mSinkSurface.getNativeClassID() : 0));
+
+        GPUPixelSource lastSource = mSourceRawData;
+        if (mLipstickFilter != null && mLipstickFilter.getNativeClassID() != 0) {
+            lastSource.AddSink(mLipstickFilter);
+            lastSource = mLipstickFilter;
+        }
+        if (mBlusherFilter != null && mBlusherFilter.getNativeClassID() != 0) {
+            lastSource.AddSink(mBlusherFilter);
+            lastSource = mBlusherFilter;
+        }
+        if (mBeautyFilter != null && mBeautyFilter.getNativeClassID() != 0) {
+            lastSource.AddSink(mBeautyFilter);
+            lastSource = mBeautyFilter;
+        }
+        if (mFaceReshapeFilter != null && mFaceReshapeFilter.getNativeClassID() != 0) {
+            lastSource.AddSink(mFaceReshapeFilter);
+            lastSource = mFaceReshapeFilter;
+        }
+        if (mWhiteBalanceFilter != null && mWhiteBalanceFilter.getNativeClassID() != 0) {
+            lastSource.AddSink(mWhiteBalanceFilter);
+            lastSource = mWhiteBalanceFilter;
+        }
+        if (mSaturationFilter != null && mSaturationFilter.getNativeClassID() != 0) {
+            lastSource.AddSink(mSaturationFilter);
+            lastSource = mSaturationFilter;
         }
 
-        // Start camera, begin capturing images
+        if (mSinkSurface != null && mSinkSurface.getNativeClassID() != 0) {
+            lastSource.AddSink(mSinkSurface);
+            Log.i(TAG, "SinkSurface successfully connected to " + (lastSource instanceof GPUPixelFilter ? ((GPUPixelFilter)lastSource).GetFilterClassName() : "SourceRawData"));
+        } else {
+            Log.e(TAG, "mSinkSurface is invalid ID!");
+        }
+
+        if (mCaptureSinkRawData != null && mCaptureSinkRawData.getNativeClassID() != 0) {
+            lastSource.AddSink(mCaptureSinkRawData);
+        }
+
         mCamera2Helper.startCamera();
-
-        // Set initial mirror setting after camera is ready
-        // This will be called again when switching cameras
         updateMirrorSetting();
+        updateFlashlightIcon();
 
-        Log.d(TAG, "setupCamera: cost " + (System.currentTimeMillis() - start));
+        Log.d(TAG, "setupCamera completed in: " + (System.currentTimeMillis() - start) + "ms");
     }
 
-    /**
-     * Update mirror setting
-     * <p>
-     * Update SinkSurface mirror status based on current camera type and mirror setting.
-     * Front camera defaults to enabled mirror (like looking in a mirror), back camera does not mirror.
-     */
     private void updateMirrorSetting() {
         if (mSinkSurface != null && mCamera2Helper != null) {
             boolean shouldMirror = mCamera2Helper.shouldMirrorPreview();
             mSinkSurface.SetMirror(shouldMirror);
-            Log.d(TAG, "Mirror setting updated: " + shouldMirror +
-                    " (Camera: " + (mCamera2Helper.getCameraFacing() ==
-                    android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT ? "FRONT" : "BACK") +
-                    ", MirrorEnabled: " + mCamera2Helper.isMirrorEnabled() + ")");
         }
     }
 
-    /**
-     * Request capture, mark to save after next frame processing is completed
-     */
     private void requestCapture() {
         if (mCaptureSinkRawData == null) {
-            Toast.makeText(this, "Photo capture function not initialized", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (mCaptureExecutor == null || mCaptureExecutor.isShutdown()) {
-            Toast.makeText(this, "Save thread not available", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "拍照功能未就绪", Toast.LENGTH_SHORT).show();
             return;
         }
         if (mCaptureRequested) {
-            Toast.makeText(this, "Saving in progress, please wait", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "正在保存中...", Toast.LENGTH_SHORT).show();
             return;
         }
         mCaptureRequested = true;
-        Toast.makeText(this, "Saving current image", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "📷 拍照成功，正在保存", Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Save RGBA data as PNG file to app cache directory
-     */
     private void saveCapturedImage(byte[] rgbaData, int width, int height) {
         int pixelCount = width * height * 4;
-        // if size changed, clear and reallocate
         if (mTakePictureBuffer != null && mTakePictureBuffer.capacity() != pixelCount) {
             mTakePictureBuffer.clear();
             mTakePictureBuffer = null;
@@ -470,13 +748,13 @@ public class MainActivity extends AppCompatActivity {
         mTakePictureBuffer.rewind();
         mTakePictureBuffer.put(rgbaData);
         mTakePictureBuffer.position(0);
+
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         bitmap.copyPixelsFromBuffer(mTakePictureBuffer);
 
         File captureDir = new File(getCacheDir(), "captures");
         if (!captureDir.exists() && !captureDir.mkdirs()) {
-            runOnUiThread(() ->
-                    Toast.makeText(MainActivity.this, "Failed to create cache directory", Toast.LENGTH_SHORT).show());
+            runOnUiThread(() -> Toast.makeText(MainActivity.this, "创建保存目录失败", Toast.LENGTH_SHORT).show());
             bitmap.recycle();
             return;
         }
@@ -487,41 +765,33 @@ public class MainActivity extends AppCompatActivity {
         try (FileOutputStream fos = new FileOutputStream(outFile)) {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
             fos.flush();
-            runOnUiThread(() ->
-                    Toast.makeText(MainActivity.this,
-                            "Save successful: " + outFile.getAbsolutePath(), Toast.LENGTH_SHORT).show());
+            runOnUiThread(() -> Toast.makeText(MainActivity.this, "已保存照片到：" + outFile.getName(), Toast.LENGTH_SHORT).show());
         } catch (IOException e) {
             Log.e(TAG, "Failed to save capture", e);
-            runOnUiThread(() ->
-                    Toast.makeText(MainActivity.this,
-                            "Save failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            runOnUiThread(() -> Toast.makeText(MainActivity.this, "保存失败: " + e.getMessage(), Toast.LENGTH_SHORT).show());
         } finally {
             bitmap.recycle();
         }
     }
 
     public void checkCameraPermission() {
-        // Check camera permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-            // If no camera permission, request permission
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
                     CAMERA_PERMISSION_REQUEST_CODE);
         } else {
-            // Has permission, set up camera
             setupCamera();
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(
-            int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 setupCamera();
             } else {
-                Toast.makeText(this, "No camera permission!", LENGTH_LONG).show();
+                Toast.makeText(this, "需要相机权限才能使用美颜相机！", LENGTH_LONG).show();
             }
         }
     }
@@ -529,7 +799,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         if (mCamera2Helper != null && !mCamera2Helper.isCameraOpened()) {
             mCamera2Helper.startCamera();
         }
@@ -538,7 +807,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-
         if (mCamera2Helper != null) {
             mCamera2Helper.stopCamera();
         }
@@ -546,19 +814,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        // Release camera resources
         if (mCamera2Helper != null) {
             mCamera2Helper.stopCamera();
             mCamera2Helper = null;
         }
-
-        // Release face detector
         if (mFaceDetector != null) {
             mFaceDetector.destroy();
             mFaceDetector = null;
         }
-        //
-        // Release GPUPixel resources
         if (mBeautyFilter != null) {
             mBeautyFilter.Destroy();
             mBeautyFilter = null;
@@ -567,28 +830,38 @@ public class MainActivity extends AppCompatActivity {
             mFaceReshapeFilter.Destroy();
             mFaceReshapeFilter = null;
         }
-
-        // Release GPUPixel resources
         if (mLipstickFilter != null) {
             mLipstickFilter.Destroy();
             mLipstickFilter = null;
         }
-
+        if (mBlusherFilter != null) {
+            mBlusherFilter.Destroy();
+            mBlusherFilter = null;
+        }
+        if (mWhiteBalanceFilter != null) {
+            mWhiteBalanceFilter.Destroy();
+            mWhiteBalanceFilter = null;
+        }
+        if (mSaturationFilter != null) {
+            mSaturationFilter.Destroy();
+            mSaturationFilter = null;
+        }
         if (mSourceRawData != null) {
             mSourceRawData.Destroy();
             mSourceRawData = null;
         }
-
         if (mCaptureSinkRawData != null) {
             mCaptureSinkRawData.Destroy();
             mCaptureSinkRawData = null;
         }
-
         if (mSinkSurface != null) {
             mSinkSurface.Destroy();
             mSinkSurface = null;
         }
-
+        if (mCurrentOutputSurface != null) {
+            mCurrentOutputSurface.release();
+            mCurrentOutputSurface = null;
+        }
         if (mCaptureExecutor != null) {
             mCaptureExecutor.shutdownNow();
             mCaptureExecutor = null;
