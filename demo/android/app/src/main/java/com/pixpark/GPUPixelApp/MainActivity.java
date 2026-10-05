@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int CAT_SHAPE = 1;   // 美型
     private static final int CAT_MAKEUP = 2;  // 美妆
     private static final int CAT_FILTER = 3;  // 滤镜
+    private static final int CAT_STICKER = 4; // 贴纸
 
     // Item ID constants
     private static final int ID_SMOOTH = 1;
@@ -71,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int ID_FILTER_COOL = 10;
     private static final int ID_FILTER_FILM = 11;
     private static final int ID_FILTER_BW = 12;
+    private static final int ID_STICKER_NONE = 13;
+    private static final int ID_STICKER_CAT_EARS = 14;
 
     public static class BeautyOption {
         int id;
@@ -91,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
     private final List<BeautyOption> mOptions = new ArrayList<>();
     private BeautyOption mSelectedOption = null;
     private int mSelectedFilterId = ID_FILTER_ORIGIN;
+    private int mSelectedStickerId = ID_STICKER_NONE;
 
     private Camera2Helper mCamera2Helper;
     private GPUPixelSourceRawData mSourceRawData;
@@ -98,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
     private GPUPixelFilter mBlusherFilter;
     private GPUPixelFilter mBeautyFilter;
     private GPUPixelFilter mFaceReshapeFilter;
+    private GPUPixelFilter mFaceStickerFilter;
     private GPUPixelFilter mWhiteBalanceFilter;
     private GPUPixelFilter mSaturationFilter;
     private FaceDetector mFaceDetector;
@@ -164,6 +169,10 @@ public class MainActivity extends AppCompatActivity {
         mOptions.add(new BeautyOption(ID_FILTER_COOL, "冷白", R.drawable.ic_filter, CAT_FILTER, 100));
         mOptions.add(new BeautyOption(ID_FILTER_FILM, "胶片", R.drawable.ic_filter, CAT_FILTER, 100));
         mOptions.add(new BeautyOption(ID_FILTER_BW, "黑白", R.drawable.ic_filter, CAT_FILTER, 100));
+
+        // 贴纸
+        mOptions.add(new BeautyOption(ID_STICKER_NONE, "无贴纸", R.drawable.ic_reset, CAT_STICKER, 0));
+        mOptions.add(new BeautyOption(ID_STICKER_CAT_EARS, "猫耳朵", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
 
         // Default selected option: 磨皮
         mSelectedOption = mOptions.get(0);
@@ -270,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("美型"));
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("美妆"));
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("滤镜"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("贴纸"));
 
         binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -340,6 +350,8 @@ public class MainActivity extends AppCompatActivity {
             boolean isSelected;
             if (category == CAT_FILTER) {
                 isSelected = (option.id == mSelectedFilterId);
+            } else if (category == CAT_STICKER) {
+                isSelected = (option.id == mSelectedStickerId);
             } else {
                 isSelected = (mSelectedOption != null && mSelectedOption.id == option.id);
             }
@@ -351,6 +363,10 @@ public class MainActivity extends AppCompatActivity {
                     mSelectedFilterId = option.id;
                     applyFilterPreset(mSelectedFilterId);
                     refreshItemsForCategory(category);
+                } else if (category == CAT_STICKER) {
+                    mSelectedStickerId = option.id;
+                    applyStickerPreset(mSelectedStickerId);
+                    refreshItemsForCategory(category);
                 } else {
                     selectBeautyOption(option);
                     refreshItemsForCategory(category);
@@ -361,12 +377,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // If category changed and current selected option not in this category, select first
-        if (category != CAT_FILTER && (mSelectedOption == null || mSelectedOption.category != category)) {
+        if (category != CAT_FILTER && category != CAT_STICKER && (mSelectedOption == null || mSelectedOption.category != category)) {
             if (firstInCat != null) {
                 selectBeautyOption(firstInCat);
             }
-        } else if (category == CAT_FILTER) {
-            // For filter tab, hide the slider
+        } else if (category == CAT_FILTER || category == CAT_STICKER) {
+            // For filter/sticker tab, hide the slider
             binding.layoutSlider.setVisibility(View.GONE);
         } else {
             binding.layoutSlider.setVisibility(View.VISIBLE);
@@ -475,6 +491,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void applyStickerPreset(int stickerId) {
+        if (mFaceStickerFilter == null) return;
+        if (stickerId == ID_STICKER_CAT_EARS) {
+            File stickerFile = new File(getExternalFilesDir(null), "gpupixel/res/cat_ears.png");
+            if (stickerFile.exists()) {
+                mFaceStickerFilter.SetProperty("sticker_path", stickerFile.getAbsolutePath());
+                mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                mFaceStickerFilter.SetProperty("scale", 1.0f);
+                mFaceStickerFilter.SetProperty("alpha", 1.0f);
+            }
+        } else {
+            mFaceStickerFilter.SetProperty("alpha", 0.0f);
+        }
+    }
+
     /**
      * Long-press compare mode: toggles between 0 effects and full active effects
      */
@@ -503,12 +534,16 @@ public class MainActivity extends AppCompatActivity {
             if (mSaturationFilter != null) {
                 mSaturationFilter.SetProperty("saturation", 1.0f);
             }
+            if (mFaceStickerFilter != null) {
+                mFaceStickerFilter.SetProperty("alpha", 0.0f);
+            }
         } else {
             // Restore all current params
             for (BeautyOption option : mOptions) {
                 applyFilterParam(option);
             }
             applyFilterPreset(mSelectedFilterId);
+            applyStickerPreset(mSelectedStickerId);
         }
     }
 
@@ -520,6 +555,10 @@ public class MainActivity extends AppCompatActivity {
             option.progress = 0;
         }
         mSelectedFilterId = ID_FILTER_ORIGIN;
+        mSelectedStickerId = ID_STICKER_NONE;
+        if (mFaceStickerFilter != null) {
+            mFaceStickerFilter.SetProperty("alpha", 0.0f);
+        }
 
         if (mSelectedOption != null) {
             binding.activeSeekbar.setProgress(0);
@@ -546,6 +585,14 @@ public class MainActivity extends AppCompatActivity {
         mBlusherFilter = GPUPixelFilter.Create(GPUPixelFilter.BLUSHER_FILTER);
         mBeautyFilter = GPUPixelFilter.Create(GPUPixelFilter.BEAUTY_FACE_FILTER);
         mFaceReshapeFilter = GPUPixelFilter.Create(GPUPixelFilter.FACE_RESHAPE_FILTER);
+        mFaceStickerFilter = GPUPixelFilter.Create(GPUPixelFilter.FACE_STICKER_FILTER);
+        File stickerFile = new File(getExternalFilesDir(null), "gpupixel/res/cat_ears.png");
+        if (stickerFile.exists()) {
+            mFaceStickerFilter.SetProperty("sticker_path", stickerFile.getAbsolutePath());
+            mFaceStickerFilter.SetProperty("anchor", 0);
+            mFaceStickerFilter.SetProperty("scale", 1.0f);
+            mFaceStickerFilter.SetProperty("alpha", 0.0f);
+        }
         mWhiteBalanceFilter = GPUPixelFilter.Create(GPUPixelFilter.WHITE_BALANCE_FILTER);
         mSaturationFilter = GPUPixelFilter.Create(GPUPixelFilter.SATURATION_FILTER);
 
@@ -614,6 +661,7 @@ public class MainActivity extends AppCompatActivity {
                 if (mFaceReshapeFilter != null) mFaceReshapeFilter.SetProperty("face_landmark", landmarks);
                 if (mLipstickFilter != null) mLipstickFilter.SetProperty("face_landmark", landmarks);
                 if (mBlusherFilter != null) mBlusherFilter.SetProperty("face_landmark", landmarks);
+                if (mFaceStickerFilter != null) mFaceStickerFilter.SetProperty("face_landmark", landmarks);
 
                 if (!mHasFaceDetected) {
                     mHasFaceDetected = true;
@@ -626,6 +674,7 @@ public class MainActivity extends AppCompatActivity {
                 if (mFaceReshapeFilter != null) mFaceReshapeFilter.SetProperty("face_landmark", new float[0]);
                 if (mLipstickFilter != null) mLipstickFilter.SetProperty("face_landmark", new float[0]);
                 if (mBlusherFilter != null) mBlusherFilter.SetProperty("face_landmark", new float[0]);
+                if (mFaceStickerFilter != null) mFaceStickerFilter.SetProperty("face_landmark", new float[0]);
 
                 if (mHasFaceDetected) {
                     mHasFaceDetected = false;
@@ -688,6 +737,10 @@ public class MainActivity extends AppCompatActivity {
         if (mFaceReshapeFilter != null && mFaceReshapeFilter.getNativeClassID() != 0) {
             lastSource.AddSink(mFaceReshapeFilter);
             lastSource = mFaceReshapeFilter;
+        }
+        if (mFaceStickerFilter != null && mFaceStickerFilter.getNativeClassID() != 0) {
+            lastSource.AddSink(mFaceStickerFilter);
+            lastSource = mFaceStickerFilter;
         }
         if (mWhiteBalanceFilter != null && mWhiteBalanceFilter.getNativeClassID() != 0) {
             lastSource.AddSink(mWhiteBalanceFilter);
