@@ -74,6 +74,15 @@ public class MainActivity extends AppCompatActivity {
     private static final int ID_FILTER_BW = 12;
     private static final int ID_STICKER_NONE = 13;
     private static final int ID_STICKER_CAT_EARS = 14;
+    private static final int ID_STICKER_BUNNY_EARS = 15;
+    private static final int ID_STICKER_CROWN = 16;
+    private static final int ID_STICKER_ANGEL_HALO = 17;
+    private static final int ID_STICKER_DEVIL_HORNS = 18;
+    private static final int ID_STICKER_SUNGLASSES = 19;
+    private static final int ID_STICKER_HEART_BLUSH = 20;
+    private static final int ID_STICKER_CLOWN_NOSE = 21;
+    private static final int ID_STICKER_MUSTACHE = 22;
+    private static final int ID_STICKER_FLOWER_HAIRPIN = 23;
 
     public static class BeautyOption {
         int id;
@@ -170,9 +179,18 @@ public class MainActivity extends AppCompatActivity {
         mOptions.add(new BeautyOption(ID_FILTER_FILM, "胶片", R.drawable.ic_filter, CAT_FILTER, 100));
         mOptions.add(new BeautyOption(ID_FILTER_BW, "黑白", R.drawable.ic_filter, CAT_FILTER, 100));
 
-        // 贴纸
+        // 贴纸 (10款精美贴纸)
         mOptions.add(new BeautyOption(ID_STICKER_NONE, "无贴纸", R.drawable.ic_reset, CAT_STICKER, 0));
         mOptions.add(new BeautyOption(ID_STICKER_CAT_EARS, "猫耳朵", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_BUNNY_EARS, "兔耳朵", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_CROWN, "金皇冠", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_ANGEL_HALO, "天使环", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_DEVIL_HORNS, "恶魔角", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_SUNGLASSES, "酷墨镜", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_HEART_BLUSH, "爱心贴", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_CLOWN_NOSE, "小丑鼻", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_MUSTACHE, "绅士胡", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
+        mOptions.add(new BeautyOption(ID_STICKER_FLOWER_HAIRPIN, "樱花夹", R.drawable.ic_beauty_wand, CAT_STICKER, 100));
 
         // Default selected option: 磨皮
         mSelectedOption = mOptions.get(0);
@@ -493,16 +511,131 @@ public class MainActivity extends AppCompatActivity {
 
     private void applyStickerPreset(int stickerId) {
         if (mFaceStickerFilter == null) return;
-        if (stickerId == ID_STICKER_CAT_EARS) {
-            File stickerFile = new File(getExternalFilesDir(null), "gpupixel/res/cat_ears.png");
-            if (stickerFile.exists()) {
-                mFaceStickerFilter.SetProperty("sticker_path", stickerFile.getAbsolutePath());
-                mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
-                mFaceStickerFilter.SetProperty("scale", 1.0f);
-                mFaceStickerFilter.SetProperty("alpha", 1.0f);
+        File resDir = new File(getExternalFilesDir(null), "gpupixel/res");
+        switch (stickerId) {
+            case ID_STICKER_CAT_EARS: {
+                File file = new File(resDir, "cat_ears.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.0f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.0f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
             }
-        } else {
-            mFaceStickerFilter.SetProperty("alpha", 0.0f);
+            case ID_STICKER_BUNNY_EARS: {
+                File file = new File(resDir, "bunny_ears.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.15f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.15f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_STICKER_CROWN: {
+                File file = new File(resDir, "crown.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 0.95f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.05f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_STICKER_ANGEL_HALO: {
+                File file = new File(resDir, "angel_halo.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 1.05f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.35f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_STICKER_DEVIL_HORNS: {
+                File file = new File(resDir, "devil_horns.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 0.95f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.0f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_STICKER_SUNGLASSES: {
+                File file = new File(resDir, "sunglasses.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 1); // 1: Eyes
+                    mFaceStickerFilter.SetProperty("scale", 1.05f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.0f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_STICKER_HEART_BLUSH: {
+                File file = new File(resDir, "heart_blush.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 1); // 1: Eyes
+                    mFaceStickerFilter.SetProperty("scale", 1.15f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", -0.25f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_STICKER_CLOWN_NOSE: {
+                File file = new File(resDir, "clown_nose.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 2); // 2: Nose
+                    mFaceStickerFilter.SetProperty("scale", 0.45f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.0f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_STICKER_MUSTACHE: {
+                File file = new File(resDir, "mustache.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 3); // 3: Mouth
+                    mFaceStickerFilter.SetProperty("scale", 0.65f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.0f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.18f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            case ID_STICKER_FLOWER_HAIRPIN: {
+                File file = new File(resDir, "flower_hairpin.png");
+                if (file.exists()) {
+                    mFaceStickerFilter.SetProperty("sticker_path", file.getAbsolutePath());
+                    mFaceStickerFilter.SetProperty("anchor", 0); // 0: Forehead
+                    mFaceStickerFilter.SetProperty("scale", 0.65f);
+                    mFaceStickerFilter.SetProperty("offset_x", 0.5f);
+                    mFaceStickerFilter.SetProperty("offset_y", 0.15f);
+                    mFaceStickerFilter.SetProperty("alpha", 1.0f);
+                }
+                break;
+            }
+            default:
+                mFaceStickerFilter.SetProperty("alpha", 0.0f);
+                break;
         }
     }
 

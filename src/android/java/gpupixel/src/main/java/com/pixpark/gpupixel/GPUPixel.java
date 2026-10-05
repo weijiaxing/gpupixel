@@ -121,12 +121,22 @@ public class GPUPixel {
                     return;
                 }
 
-                // Copy file
+                // Copy file if not exists or if size differs
                 File targetFile = new File(targetPath);
-                if (!targetFile.exists()) {
+                boolean needCopy = !targetFile.exists();
+                if (!needCopy) {
+                    try {
+                        InputStream testIs = context.getAssets().open(assetPath);
+                        if (targetFile.length() != testIs.available()) {
+                            needCopy = true;
+                        }
+                        testIs.close();
+                    } catch (Exception ignored) {}
+                }
+                if (needCopy) {
                     InputStream is = context.getAssets().open(assetPath);
                     FileOutputStream fos = new FileOutputStream(targetFile);
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[4096];
                     int byteCount;
                     while ((byteCount = is.read(buffer)) != -1) {
                         fos.write(buffer, 0, byteCount);

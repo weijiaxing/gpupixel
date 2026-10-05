@@ -231,6 +231,15 @@ set(lib_image_resource_files
     ${CMAKE_CURRENT_SOURCE_DIR}/res/mouth.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/blusher.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/cat_ears.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/bunny_ears.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/crown.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/angel_halo.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/devil_horns.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/sunglasses.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/heart_blush.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/clown_nose.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/mustache.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/flower_hairpin.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_gray.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_light.png
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_custom.png
