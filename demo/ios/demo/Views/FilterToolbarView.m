@@ -197,6 +197,63 @@
                                     category:BeautyCategorySticker
                              defaultProgress:100]];
 
+  // 动态贴纸 (Animated Stickers)
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimNone
+                                        name:@"无动态"
+                                    iconName:@"ic_reset"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:0]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimHearts
+                                        name:@"闪烁心动"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimCatEars
+                                        name:@"动感猫耳"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimCrown
+                                        name:@"闪耀皇冠"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimHalo
+                                        name:@"霓虹光环"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimDevil
+                                        name:@"烈焰恶魔"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimFireworks
+                                        name:@"派对礼花"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimTears
+                                        name:@"二次元泪"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimSteam
+                                        name:@"冒烟怒火"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimCoins
+                                        name:@"招财金币"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+  [opts addObject:[BeautyOption optionWithId:BeautyOptionAnimDizzy
+                                        name:@"转圈晕星"
+                                    iconName:@"ic_beauty_wand"
+                                    category:BeautyCategoryAnimSticker
+                             defaultProgress:100]];
+
   self.allOptions = [opts copy];
   self.filteredOptions = [NSMutableArray array];
   self.currentCategory = BeautyCategorySkin;
@@ -273,7 +330,7 @@
   _categoryBar.translatesAutoresizingMaskIntoConstraints = NO;
   [self addSubview:_categoryBar];
 
-  NSArray* categories = @[ @"美肤", @"美型", @"美妆", @"滤镜", @"贴纸" ];
+  NSArray* categories = @[ @"美肤", @"美型", @"美妆", @"滤镜", @"贴纸", @"动态" ];
   _categoryButtons = [NSMutableArray array];
   UIStackView* catStack = [[UIStackView alloc] init];
   catStack.translatesAutoresizingMaskIntoConstraints = NO;
@@ -430,6 +487,12 @@
   _optionTitleLabel.text = option.name;
   _optionValueLabel.text = [NSString stringWithFormat:@"%ld%%", (long)option.progress];
   _intensitySlider.value = option.progress;
+
+  BOOL isPresetOnly = (option.category == BeautyCategoryFilter ||
+                       option.category == BeautyCategorySticker ||
+                       option.category == BeautyCategoryAnimSticker);
+  _intensitySlider.hidden = isPresetOnly;
+  _optionValueLabel.hidden = isPresetOnly;
 
   // Category and index in filtered options
   NSInteger idx = [self.filteredOptions indexOfObject:option];

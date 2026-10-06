@@ -10,11 +10,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, BeautyCategory) {
-  BeautyCategorySkin = 0,     // 美肤
-  BeautyCategoryShape = 1,    // 美型
-  BeautyCategoryMakeup = 2,   // 美妆
-  BeautyCategoryFilter = 3,   // 滤镜
-  BeautyCategorySticker = 4   // 贴纸
+  BeautyCategorySkin = 0,        // 美肤
+  BeautyCategoryShape = 1,       // 美型
+  BeautyCategoryMakeup = 2,      // 美妆
+  BeautyCategoryFilter = 3,      // 滤镜
+  BeautyCategorySticker = 4,     // 贴纸
+  BeautyCategoryAnimSticker = 5  // 动态贴纸
 };
 
 typedef NS_ENUM(NSInteger, BeautyOptionId) {
@@ -45,7 +46,19 @@ typedef NS_ENUM(NSInteger, BeautyOptionId) {
   BeautyOptionStickerHeartBlush = 27,
   BeautyOptionStickerClownNose = 28,
   BeautyOptionStickerMustache = 29,
-  BeautyOptionStickerFlowerHairpin = 30
+  BeautyOptionStickerFlowerHairpin = 30,
+  // 动态贴纸
+  BeautyOptionAnimNone = 40,
+  BeautyOptionAnimHearts = 41,
+  BeautyOptionAnimCatEars = 42,
+  BeautyOptionAnimCrown = 43,
+  BeautyOptionAnimHalo = 44,
+  BeautyOptionAnimDevil = 45,
+  BeautyOptionAnimFireworks = 46,
+  BeautyOptionAnimTears = 47,
+  BeautyOptionAnimSteam = 48,
+  BeautyOptionAnimCoins = 49,
+  BeautyOptionAnimDizzy = 50
 };
 
 @interface BeautyOption : NSObject

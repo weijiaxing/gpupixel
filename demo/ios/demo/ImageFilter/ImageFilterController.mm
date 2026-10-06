@@ -596,6 +596,120 @@ using namespace gpupixel;
   }
 }
 
+- (void)applyAnimStickerPreset:(BeautyOptionId)animId {
+  if (!_faceStickerFilter) return;
+
+  if (animId == BeautyOptionAnimNone) {
+    _faceStickerFilter->ClearStickers();
+    return;
+  }
+
+  NSString* folderName = nil;
+  int fps = 12;
+  StickerAnchor anchor = kAnchorForehead;
+  float scale = 1.0f;
+  float offsetX = 0.0f;
+  float offsetY = 0.0f;
+
+  switch (animId) {
+    case BeautyOptionAnimHearts:
+      folderName = @"anim_hearts";
+      fps = 12;
+      anchor = kAnchorEyes;
+      scale = 1.15f;
+      offsetX = 0.0f;
+      offsetY = -0.22f;
+      break;
+    case BeautyOptionAnimCatEars:
+      folderName = @"anim_cat_ears";
+      fps = 12;
+      anchor = kAnchorForehead;
+      scale = 1.0f;
+      offsetX = 0.0f;
+      offsetY = 0.0f;
+      break;
+    case BeautyOptionAnimCrown:
+      folderName = @"anim_crown";
+      fps = 12;
+      anchor = kAnchorForehead;
+      scale = 0.95f;
+      offsetX = 0.0f;
+      offsetY = 0.05f;
+      break;
+    case BeautyOptionAnimHalo:
+      folderName = @"anim_halo";
+      fps = 12;
+      anchor = kAnchorForehead;
+      scale = 1.05f;
+      offsetX = 0.0f;
+      offsetY = 0.35f;
+      break;
+    case BeautyOptionAnimDevil:
+      folderName = @"anim_devil";
+      fps = 12;
+      anchor = kAnchorForehead;
+      scale = 0.95f;
+      offsetX = 0.0f;
+      offsetY = 0.0f;
+      break;
+    case BeautyOptionAnimFireworks:
+      folderName = @"anim_fireworks";
+      fps = 10;
+      anchor = kAnchorForehead;
+      scale = 1.25f;
+      offsetX = 0.0f;
+      offsetY = 0.35f;
+      break;
+    case BeautyOptionAnimTears:
+      folderName = @"anim_tears";
+      fps = 12;
+      anchor = kAnchorEyes;
+      scale = 1.1f;
+      offsetX = 0.0f;
+      offsetY = -0.4f;
+      break;
+    case BeautyOptionAnimSteam:
+      folderName = @"anim_steam";
+      fps = 12;
+      anchor = kAnchorForehead;
+      scale = 1.2f;
+      offsetX = 0.0f;
+      offsetY = 0.1f;
+      break;
+    case BeautyOptionAnimCoins:
+      folderName = @"anim_coins";
+      fps = 12;
+      anchor = kAnchorForehead;
+      scale = 1.2f;
+      offsetX = 0.0f;
+      offsetY = 0.35f;
+      break;
+    case BeautyOptionAnimDizzy:
+      folderName = @"anim_dizzy";
+      fps = 12;
+      anchor = kAnchorForehead;
+      scale = 1.1f;
+      offsetX = 0.0f;
+      offsetY = 0.35f;
+      break;
+    default:
+      _faceStickerFilter->ClearStickers();
+      return;
+  }
+
+  if (folderName) {
+    NSString* fullPath = [self stickerPathForFilename:folderName];
+    if (fullPath) {
+      _faceStickerFilter->SetStickerPath([fullPath UTF8String]);
+      _faceStickerFilter->SetAnchor(anchor);
+      _faceStickerFilter->SetScale(scale);
+      _faceStickerFilter->SetOffset(offsetX, offsetY);
+      _faceStickerFilter->SetAlpha(1.0f);
+      _faceStickerFilter->SetProperty("fps", fps);
+    }
+  }
+}
+
 #pragma mark - FilterToolbarViewDelegate
 
 - (void)beautyToolbarView:(FilterToolbarView*)toolbarView didSelectOption:(BeautyOption*)option {
@@ -603,6 +717,8 @@ using namespace gpupixel;
     [self applyFilterPreset:option.optionId];
   } else if (option.category == BeautyCategorySticker) {
     [self applyStickerPreset:option.optionId];
+  } else if (option.category == BeautyCategoryAnimSticker) {
+    [self applyAnimStickerPreset:option.optionId];
   } else {
     [self applyOptionParam:option];
   }

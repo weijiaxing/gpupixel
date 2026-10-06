@@ -485,7 +485,7 @@ if(GPUPIXEL_INSTALL)
 
   # install image resource
   install(
-    FILES ${lib_image_resource_files}
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res/
     DESTINATION res
     COMPONENT resource)
 
@@ -495,10 +495,11 @@ if(GPUPIXEL_INSTALL)
     DESTINATION models
     COMPONENT resource)
 
-  # install image resource
-  foreach(image ${lib_image_resource_files})
-    file(COPY ${image} DESTINATION ${BUILD_OUTPUT_DIR}/res)
-  endforeach()
+  # copy resources
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/res/ DESTINATION ${BUILD_OUTPUT_DIR}/res)
+  if(APPLE AND GPUPIXEL_AAPL_FMWK)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/res/ DESTINATION ${BUILD_OUTPUT_DIR}/lib/gpupixel.framework/res)
+  endif()
 
   # install model resource
   foreach(model ${lib_models_resource_files})
