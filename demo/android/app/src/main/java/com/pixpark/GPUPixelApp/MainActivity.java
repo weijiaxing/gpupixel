@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean mHasFaceDetected = false;
     private boolean mIsComparing = false;
-    private boolean mIsPanelCollapsed = false;
+    private boolean mIsPanelCollapsed = true;
 
     private SurfaceTexture mCachedSurfaceTexture;
     private int mCachedSurfaceWidth = 0;
@@ -359,19 +359,65 @@ public class MainActivity extends AppCompatActivity {
 
         // Populate initial category: 美肤
         refreshItemsForCategory(CAT_SKIN);
+
+        // Bottom camera switch button
+        binding.btnSwitchCameraBottom.setOnClickListener(v -> {
+            if (mCamera2Helper != null) {
+                mCamera2Helper.switchCamera();
+                updateMirrorSetting();
+                updateFlashlightIcon();
+            }
+        });
+
+        // Album & Memories click
+        View.OnClickListener openGallery = v -> {
+            Toast.makeText(this, "打开相册", Toast.LENGTH_SHORT).show();
+        };
+        binding.btnAlbum.setOnClickListener(openGallery);
+        binding.navMemories.setOnClickListener(openGallery);
+
+        // Bottom nav camera & chats
+        binding.navCamera.setOnClickListener(v -> {
+            if (!mIsPanelCollapsed) {
+                togglePanel();
+            }
+        });
+        binding.navChats.setOnClickListener(v -> {
+            Toast.makeText(this, "Chats 功能开发中", Toast.LENGTH_SHORT).show();
+        });
+
+        // Mode switch (Photo | Video)
+        binding.btnModePhoto.setOnClickListener(v -> {
+            binding.btnModePhoto.setBackgroundResource(R.drawable.bg_mode_switch_selected);
+            binding.btnModePhoto.setTextColor(ContextCompat.getColor(this, R.color.black));
+            binding.btnModePhoto.setTypeface(null, android.graphics.Typeface.BOLD);
+
+            binding.btnModeVideo.setBackground(null);
+            binding.btnModeVideo.setTextColor(ContextCompat.getColor(this, R.color.camera_text_secondary));
+            binding.btnModeVideo.setTypeface(null, android.graphics.Typeface.NORMAL);
+        });
+
+        binding.btnModeVideo.setOnClickListener(v -> {
+            binding.btnModeVideo.setBackgroundResource(R.drawable.bg_mode_switch_selected);
+            binding.btnModeVideo.setTextColor(ContextCompat.getColor(this, R.color.black));
+            binding.btnModeVideo.setTypeface(null, android.graphics.Typeface.BOLD);
+
+            binding.btnModePhoto.setBackground(null);
+            binding.btnModePhoto.setTextColor(ContextCompat.getColor(this, R.color.camera_text_secondary));
+            binding.btnModePhoto.setTypeface(null, android.graphics.Typeface.NORMAL);
+
+            Toast.makeText(this, "切换至视频录制模式", Toast.LENGTH_SHORT).show();
+        });
+
         updatePanelToggleUI();
     }
 
     private void togglePanel() {
         mIsPanelCollapsed = !mIsPanelCollapsed;
         TransitionManager.beginDelayedTransition(binding.bottomPanel);
-        int visibility = mIsPanelCollapsed ? View.GONE : View.VISIBLE;
-        binding.scrollItems.setVisibility(visibility);
-        binding.tabLayout.setVisibility(visibility);
+        binding.layoutBeautyControls.setVisibility(mIsPanelCollapsed ? View.GONE : View.VISIBLE);
 
-        if (mIsPanelCollapsed) {
-            binding.layoutSlider.setVisibility(View.GONE);
-        } else {
+        if (!mIsPanelCollapsed) {
             int selectedTab = binding.tabLayout.getSelectedTabPosition();
             if (selectedTab != CAT_FILTER && selectedTab != CAT_STICKER && selectedTab != CAT_ANIM_STICKER) {
                 binding.layoutSlider.setVisibility(View.VISIBLE);

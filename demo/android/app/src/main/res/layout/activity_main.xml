@@ -124,123 +124,311 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@drawable/bg_bottom_panel"
+        android:background="@drawable/bg_bottom_scrim"
         android:orientation="vertical"
-        android:paddingTop="16dp"
-        android:paddingBottom="24dp">
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
 
-        <!-- Active Slider Row -->
+        <!-- Beauty Adjust Container (Collapsible) -->
         <LinearLayout
-            android:id="@+id/layout_slider"
+            android:id="@+id/layout_beauty_controls"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="10dp">
+            android:orientation="vertical"
+            android:visibility="gone">
 
-            <TextView
-                android:id="@+id/tv_slider_label"
-                android:layout_width="48dp"
-                android:layout_height="wrap_content"
-                android:text="磨皮"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <SeekBar
-                android:id="@+id/active_seekbar"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:max="100"
-                android:progress="0"
-                android:progressDrawable="@drawable/bg_seekbar_track"
-                android:thumb="@drawable/bg_seekbar_thumb" />
-
-            <TextView
-                android:id="@+id/tv_slider_value"
-                android:layout_width="44dp"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:text="0%"
-                android:textColor="@color/camera_accent"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Horizontal Beauty Items List -->
-        <HorizontalScrollView
-            android:id="@+id/scroll_items"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:overScrollMode="never"
-            android:scrollbars="none">
-
+            <!-- Active Slider Row -->
             <LinearLayout
-                android:id="@+id/layout_items_container"
-                android:layout_width="wrap_content"
+                android:id="@+id/layout_slider"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:id="@+id/tv_slider_label"
+                    android:layout_width="48dp"
+                    android:layout_height="wrap_content"
+                    android:text="磨皮"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/active_seekbar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/bg_seekbar_track"
+                    android:thumb="@drawable/bg_seekbar_thumb" />
+
+                <TextView
+                    android:id="@+id/tv_slider_value"
+                    android:layout_width="44dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text="0%"
+                    android:textColor="@color/camera_accent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Horizontal Beauty Items List -->
+            <HorizontalScrollView
+                android:id="@+id/scroll_items"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:overScrollMode="never"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/layout_items_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="10dp" />
+            </HorizontalScrollView>
+
+            <!-- Category Tabs (美肤 / 美型 / 美妆 / 滤镜) -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tab_layout"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_marginBottom="10dp"
+                android:background="@android:color/transparent"
+                app:tabGravity="center"
+                app:tabIndicatorColor="@color/camera_accent"
+                app:tabIndicatorFullWidth="false"
+                app:tabIndicatorHeight="2.5dp"
+                app:tabMode="fixed"
+                app:tabRippleColor="@null"
+                app:tabSelectedTextColor="@color/white"
+                app:tabTextAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                app:tabTextColor="@color/camera_text_secondary" />
+        </LinearLayout>
+
+        <!-- Mode Switcher: Photo | Video -->
+        <LinearLayout
+            android:id="@+id/layout_mode_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_mode_switch_track"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="2dp">
+
+            <TextView
+                android:id="@+id/btn_mode_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_mode_switch_selected"
+                android:gravity="center"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="10dp" />
-        </HorizontalScrollView>
+                android:text="Photo"
+                android:textColor="@color/black"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
-        <!-- Category Tabs (美肤 / 美型 / 美妆 / 滤镜) -->
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tab_layout"
-            android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
-            app:tabGravity="center"
-            app:tabIndicatorColor="@color/camera_accent"
-            app:tabIndicatorFullWidth="false"
-            app:tabIndicatorHeight="2.5dp"
-            app:tabMode="fixed"
-            app:tabRippleColor="@null"
-            app:tabSelectedTextColor="@color/white"
-            app:tabTextAppearance="@style/TextAppearance.MaterialComponents.Caption"
-            app:tabTextColor="@color/camera_text_secondary" />
+            <TextView
+                android:id="@+id/btn_mode_video"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Video"
+                android:textColor="@color/camera_text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
 
-        <!-- Shutter Row -->
+        <!-- Shutter & Controls Row -->
         <RelativeLayout
             android:id="@+id/layout_shutter"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_height="86dp"
             android:paddingStart="24dp"
             android:paddingEnd="24dp">
 
-            <!-- Capture Shutter Button -->
+            <!-- Album / Memories Thumbnail (Left) -->
+            <ImageView
+                android:id="@+id/btn_album"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_album_preview"
+                android:contentDescription="Album" />
+
+            <!-- Capture Shutter Button (Center) -->
             <FrameLayout
                 android:id="@+id/btn_capture"
-                android:layout_width="74dp"
-                android:layout_height="74dp"
+                android:layout_width="76dp"
+                android:layout_height="76dp"
                 android:layout_centerInParent="true"
-                android:background="@drawable/bg_shutter_outer">
+                android:background="@drawable/bg_shutter_outer_pink">
 
                 <View
-                    android:layout_width="58dp"
-                    android:layout_height="58dp"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:layout_gravity="center"
                     android:background="@drawable/bg_shutter_inner" />
             </FrameLayout>
 
-            <!-- Beauty Panel Toggle Button (Horizontal Right / Bottom Right) -->
+            <!-- Beauty Wand Satellite Button (Top Right of Shutter with pink badge) -->
+            <FrameLayout
+                android:id="@+id/layout_beauty_wand"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="2dp"
+                android:layout_toEndOf="@id/btn_capture">
+
+                <ImageButton
+                    android:id="@+id/btn_toggle_panel"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_satellite_wand"
+                    android:contentDescription="Toggle Beauty Panel"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_beauty_wand" />
+
+                <View
+                    android:id="@+id/view_beauty_badge"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:background="@drawable/bg_pink_badge" />
+            </FrameLayout>
+
+            <!-- Flip Camera Button (Right) -->
             <ImageButton
-                android:id="@+id/btn_toggle_panel"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
+                android:id="@+id/btn_switch_camera_bottom"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:background="@drawable/bg_circle_icon_button"
-                android:contentDescription="Toggle Panel"
-                android:src="@drawable/ic_beauty_wand" />
+                android:contentDescription="Switch Camera"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_switch_camera" />
         </RelativeLayout>
+
+        <!-- Bottom Navigation Bar: Memories | Camera | Chats -->
+        <LinearLayout
+            android:id="@+id/bottom_nav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp">
+
+            <!-- Tab 1: Memories -->
+            <LinearLayout
+                android:id="@+id/nav_memories"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:contentDescription="Memories"
+                    android:src="@drawable/ic_nav_memories"
+                    app:tint="@color/camera_text_secondary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Memories"
+                    android:textColor="@color/camera_text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- Tab 2: Camera (Active) -->
+            <LinearLayout
+                android:id="@+id/nav_camera"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:contentDescription="Camera"
+                    android:src="@drawable/ic_nav_camera" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Camera"
+                    android:textColor="@color/camera_accent"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <!-- Active Indicator Line -->
+                <View
+                    android:layout_width="16dp"
+                    android:layout_height="2.5dp"
+                    android:layout_marginTop="3dp"
+                    android:background="@drawable/bg_pink_badge" />
+            </LinearLayout>
+
+            <!-- Tab 3: Chats -->
+            <LinearLayout
+                android:id="@+id/nav_chats"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:contentDescription="Chats"
+                    android:src="@drawable/ic_nav_chats"
+                    app:tint="@color/camera_text_secondary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Chats"
+                    android:textColor="@color/camera_text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 
 </RelativeLayout>
