@@ -69,23 +69,35 @@ void BeautyFaceFilter::SetInputFramebuffer(
 }
 
 void BeautyFaceFilter::SetHighPassDelta(float highPassDelta) {
-  box_high_pass_filter_->SetDelta(highPassDelta);
+  if (box_high_pass_filter_) {
+    box_high_pass_filter_->SetDelta(highPassDelta);
+  }
 }
 
 void BeautyFaceFilter::SetSharpen(float sharpen) {
-  beauty_face_filter_->SetSharpen(sharpen);
+  if (beauty_face_filter_) {
+    beauty_face_filter_->SetSharpen(sharpen);
+  }
 }
 
 void BeautyFaceFilter::SetBlurAlpha(float blurAlpha) {
-  beauty_face_filter_->SetBlurAlpha(blurAlpha);
+  if (beauty_face_filter_) {
+    beauty_face_filter_->SetBlurAlpha(blurAlpha);
+  }
 }
 
 void BeautyFaceFilter::SetWhite(float white) {
-  beauty_face_filter_->SetWhite(white);
+  if (beauty_face_filter_) {
+    beauty_face_filter_->SetWhite(white);
+  }
 }
 
 void BeautyFaceFilter::SetRadius(float radius) {
-  box_blur_filter_->SetRadius(radius);
-  box_high_pass_filter_->SetRadius(radius);
+  if (box_blur_filter_) {
+    box_blur_filter_->SetRadius(radius);
+  }
+  if (box_high_pass_filter_) {
+    box_high_pass_filter_->SetRadius(radius);
+  }
 }
 }  // namespace gpupixel

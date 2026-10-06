@@ -71,6 +71,10 @@
 /** Switch camera */
 - (NSError*)reverseCamera;
 
+/** Toggle torch / flashlight */
+- (BOOL)toggleTorch;
+- (BOOL)isTorchOn;
+
 /** Dynamically change video resolution during capture */
 - (void)changeSessionPreset:(AVCaptureSessionPreset)sessionPreset;
 

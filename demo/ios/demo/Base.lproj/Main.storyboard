@@ -13,12 +13,12 @@
         <scene sceneID="VRK-sO-b6Z">
             <objects>
                 <navigationController autoresizesArchivedViewToFullSize="NO" id="00K-Ms-Gjb" sceneMemberID="viewController">
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="eIs-wa-4jD">
+                    <navigationBar key="navigationBar" hidden="YES" contentMode="scaleToFill" id="eIs-wa-4jD">
                         <rect key="frame" x="0.0" y="48" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <connections>
-                        <segue destination="Gzh-ND-EMZ" kind="relationship" relationship="rootViewController" id="raA-bc-il3"/>
+                        <segue destination="wKd-1l-hyO" kind="relationship" relationship="rootViewController" id="raA-bc-il3"/>
                     </connections>
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="nV5-yL-1jp" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -103,7 +103,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="arW-EX-z7K"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     </view>
                     <navigationItem key="navigationItem" title="Video Filter" id="HgI-OU-Tda"/>
                 </viewController>

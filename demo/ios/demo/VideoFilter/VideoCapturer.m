@@ -181,7 +181,16 @@
     }
     // Check camera permission
     AVAuthorizationStatus videoAuthStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-    if (videoAuthStatus != AVAuthorizationStatusAuthorized) {
+    if (videoAuthStatus == AVAuthorizationStatusNotDetermined) {
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            if (granted) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self startCapture];
+                });
+            }
+        }];
+        return nil;
+    } else if (videoAuthStatus != AVAuthorizationStatusAuthorized) {
         return [self p_errorWithDomain:@"MAVideoCapture::Camera Authorizate failed!"];
     }
     
@@ -412,6 +421,30 @@
     [self adjustFrameRate:self.captureParam.frameRate];
     
     return nil;
+}
+
+- (BOOL)toggleTorch
+{
+    AVCaptureDevice *device = self.captureDeviceInput.device;
+    if ([device hasTorch] && [device isTorchAvailable]) {
+        NSError *error = nil;
+        if ([device lockForConfiguration:&error]) {
+            if (device.torchMode == AVCaptureTorchModeOn) {
+                device.torchMode = AVCaptureTorchModeOff;
+            } else {
+                [device setTorchModeOnWithLevel:AVCaptureMaxAvailableTorchLevel error:nil];
+            }
+            [device unlockForConfiguration];
+            return device.torchMode == AVCaptureTorchModeOn;
+        }
+    }
+    return NO;
+}
+
+- (BOOL)isTorchOn
+{
+    AVCaptureDevice *device = self.captureDeviceInput.device;
+    return (device.hasTorch && device.torchMode == AVCaptureTorchModeOn);
 }
 
 

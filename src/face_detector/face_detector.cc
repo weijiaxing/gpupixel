@@ -58,6 +58,10 @@ std::vector<float> FaceDetector::Detect(const uint8_t* data,
   std::vector<mars_vision::FaceLandmarkerResult> face_results;
   std::vector<float> landmarks;
 
+  if (!mars_face_detector_) {
+    return landmarks;
+  }
+
   mars_face_detector_->Detect(image, face_results);
   // only support one face
   for (auto& result : face_results) {

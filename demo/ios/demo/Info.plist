@@ -23,9 +23,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>相机权限</string>
+	<string>需要访问相机以提供实时美颜滤镜体验</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>相册权限</string>
+	<string>需要访问相册以选取照片进行美颜修图</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>需要相册写入权限以保存拍摄和修图后的精彩照片</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
