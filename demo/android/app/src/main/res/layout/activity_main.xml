@@ -331,15 +331,15 @@
                 android:src="@drawable/ic_switch_camera" />
         </RelativeLayout>
 
-        <!-- Bottom Navigation Bar: Memories | Camera | Chats -->
+        <!-- Bottom Navigation Bar (Text Only): Memories | Camera | Chats -->
         <LinearLayout
             android:id="@+id/bottom_nav"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="16dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingBottom="8dp">
+            android:paddingBottom="12dp">
 
             <!-- Tab 1: Memories -->
             <LinearLayout
@@ -352,20 +352,14 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="Memories"
-                    android:src="@drawable/ic_nav_memories"
-                    app:tint="@color/camera_text_secondary" />
-
                 <TextView
+                    android:id="@+id/tv_nav_memories"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:letterSpacing="0.02"
                     android:text="Memories"
                     android:textColor="@color/camera_text_secondary"
-                    android:textSize="11sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <!-- Tab 2: Camera (Active) -->
@@ -379,26 +373,22 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="Camera"
-                    android:src="@drawable/ic_nav_camera" />
-
                 <TextView
+                    android:id="@+id/tv_nav_camera"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:letterSpacing="0.02"
                     android:text="Camera"
                     android:textColor="@color/camera_accent"
-                    android:textSize="11sp"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <!-- Active Indicator Line -->
                 <View
+                    android:id="@+id/view_nav_camera_indicator"
                     android:layout_width="16dp"
                     android:layout_height="2.5dp"
-                    android:layout_marginTop="3dp"
+                    android:layout_marginTop="4dp"
                     android:background="@drawable/bg_pink_badge" />
             </LinearLayout>
 
@@ -413,20 +403,14 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="Chats"
-                    android:src="@drawable/ic_nav_chats"
-                    app:tint="@color/camera_text_secondary" />
-
                 <TextView
+                    android:id="@+id/tv_nav_chats"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:letterSpacing="0.02"
                     android:text="Chats"
                     android:textColor="@color/camera_text_secondary"
-                    android:textSize="11sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
