@@ -22,7 +22,8 @@ using namespace gpupixel;
                                      FilterToolbarViewDelegate,
                                      PHPickerViewControllerDelegate,
                                      UINavigationControllerDelegate,
-                                     UIImagePickerControllerDelegate> {
+                                     UIImagePickerControllerDelegate,
+                                     UIGestureRecognizerDelegate> {
   std::shared_ptr<SourceRawData> _sourceRawData;
   std::shared_ptr<SinkRawData> _sinkRawData;
   std::shared_ptr<SinkView> _gpuPixelView;
@@ -245,6 +246,12 @@ using namespace gpupixel;
   [self.view bringSubviewToFront:self.topBarView];
   [self.view bringSubviewToFront:self.bottomPanelContainer];
   [self.view bringSubviewToFront:self.filterToolbarView];
+
+  // Outside tap gesture to dismiss beauty panel (matches Android viewfinder tap)
+  UITapGestureRecognizer* outsideTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleOutsideTap:)];
+  outsideTap.delegate = self;
+  outsideTap.cancelsTouchesInView = NO;
+  [self.view addGestureRecognizer:outsideTap];
 }
 
 - (void)setupTopBar {
@@ -640,6 +647,10 @@ using namespace gpupixel;
 }
 
 - (void)onToggleBeautyPanel {
+  if (!self.isPanelCollapsed) {
+    [self collapseBeautyPanel];
+    return;
+  }
   self.isPanelCollapsed = NO;
   self.filterToolbarView.hidden = NO;
   [UIView animateWithDuration:0.25 animations:^{
@@ -650,7 +661,8 @@ using namespace gpupixel;
   }];
 }
 
-- (void)beautyToolbarViewDidRequestDismiss:(FilterToolbarView*)toolbarView {
+- (void)collapseBeautyPanel {
+  if (self.isPanelCollapsed) return;
   self.isPanelCollapsed = YES;
   self.bottomPanelContainer.hidden = NO;
   [UIView animateWithDuration:0.25 animations:^{
@@ -659,6 +671,31 @@ using namespace gpupixel;
   } completion:^(BOOL finished) {
     self.filterToolbarView.hidden = YES;
   }];
+}
+
+- (void)beautyToolbarViewDidRequestDismiss:(FilterToolbarView*)toolbarView {
+  [self collapseBeautyPanel];
+}
+
+#pragma mark - UIGestureRecognizerDelegate
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer*)gestureRecognizer shouldReceiveTouch:(UITouch*)touch {
+  if (self.isPanelCollapsed) return NO;
+  CGPoint loc = [touch locationInView:self.view];
+  if (CGRectContainsPoint(self.filterToolbarView.frame, loc)) {
+    return NO;
+  }
+  if (CGRectContainsPoint(self.topBarView.frame, loc) ||
+      CGRectContainsPoint(self.compareButton.frame, loc)) {
+    return NO;
+  }
+  return YES;
+}
+
+- (void)handleOutsideTap:(UITapGestureRecognizer*)gesture {
+  if (!self.isPanelCollapsed && gesture.state == UIGestureRecognizerStateEnded) {
+    [self collapseBeautyPanel];
+  }
 }
 
 - (void)onCompareTouchDown {

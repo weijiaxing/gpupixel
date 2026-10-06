@@ -402,6 +402,11 @@
     [_categoryIndicator.bottomAnchor constraintEqualToAnchor:_categoryBar.bottomAnchor constant:-2],
   ]];
 
+  // Swipe down gesture to dismiss beauty panel
+  UISwipeGestureRecognizer* swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(onDismissTapped)];
+  swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
+  [self addGestureRecognizer:swipeDown];
+
   [self updateCategoryFilter:BeautyCategorySkin];
 }
 
