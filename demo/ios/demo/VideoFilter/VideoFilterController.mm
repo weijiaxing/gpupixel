@@ -70,6 +70,15 @@ using namespace gpupixel;
 @property(nonatomic, strong) UIView* beautyBadgeDot;
 @property(nonatomic, strong) UIButton* flipCameraButton;
 
+// Bottom Navigation Bar (Memories | Camera | Chats)
+@property(nonatomic, strong) UIView* bottomNav;
+@property(nonatomic, strong) UIButton* navMemoriesBtn;
+@property(nonatomic, strong) UIView* navCameraContainer;
+@property(nonatomic, strong) UILabel* navCameraLabel;
+@property(nonatomic, strong) UIView* navCameraIndicator;
+@property(nonatomic, strong) UIButton* navCameraBtn;
+@property(nonatomic, strong) UIButton* navChatsBtn;
+
 // Collapsible Beauty Panel
 @property(nonatomic, strong) FilterToolbarView* filterToolbarView;
 
@@ -362,12 +371,12 @@ using namespace gpupixel;
 
   [NSLayoutConstraint activateConstraints:@[
     [_faceStatusBadge.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:20],
-    [_faceStatusBadge.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-155],
+    [_faceStatusBadge.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-200],
     [_faceStatusBadge.heightAnchor constraintEqualToConstant:28],
     [_faceStatusBadge.widthAnchor constraintGreaterThanOrEqualToConstant:96],
 
     [_compareButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
-    [_compareButton.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-155],
+    [_compareButton.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-200],
     [_compareButton.heightAnchor constraintEqualToConstant:38],
   ]];
 }
@@ -484,6 +493,62 @@ using namespace gpupixel;
   [_flipCameraButton addTarget:self action:@selector(onSwitchCameraTapped) forControlEvents:UIControlEventTouchUpInside];
   [_shutterRow addSubview:_flipCameraButton];
 
+  // 3. Bottom Navigation Bar: Memories | Camera | Chats
+  _bottomNav = [[UIView alloc] init];
+  _bottomNav.translatesAutoresizingMaskIntoConstraints = NO;
+  [_bottomPanelContainer addSubview:_bottomNav];
+
+  UIStackView* navStack = [[UIStackView alloc] init];
+  navStack.translatesAutoresizingMaskIntoConstraints = NO;
+  navStack.axis = UILayoutConstraintAxisHorizontal;
+  navStack.distribution = UIStackViewDistributionFillEqually;
+  navStack.alignment = UIStackViewAlignmentCenter;
+  [_bottomNav addSubview:navStack];
+
+  // Tab 1: Memories
+  _navMemoriesBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+  _navMemoriesBtn.translatesAutoresizingMaskIntoConstraints = NO;
+  [_navMemoriesBtn setTitle:@"Memories" forState:UIControlStateNormal];
+  [_navMemoriesBtn setTitleColor:[UIColor colorWithWhite:1.0 alpha:0.6] forState:UIControlStateNormal];
+  _navMemoriesBtn.titleLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
+  [_navMemoriesBtn addTarget:self action:@selector(onNavMemoriesTapped) forControlEvents:UIControlEventTouchUpInside];
+  [navStack addArrangedSubview:_navMemoriesBtn];
+
+  // Tab 2: Camera (Active)
+  _navCameraContainer = [[UIView alloc] init];
+  _navCameraContainer.translatesAutoresizingMaskIntoConstraints = NO;
+
+  _navCameraLabel = [[UILabel alloc] init];
+  _navCameraLabel.translatesAutoresizingMaskIntoConstraints = NO;
+  _navCameraLabel.text = @"Camera";
+  _navCameraLabel.textColor = [UIColor colorWithRed:1.0 green:0.325 blue:0.463 alpha:1.0];
+  _navCameraLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightBold];
+  _navCameraLabel.textAlignment = NSTextAlignmentCenter;
+  [_navCameraContainer addSubview:_navCameraLabel];
+
+  _navCameraIndicator = [[UIView alloc] init];
+  _navCameraIndicator.translatesAutoresizingMaskIntoConstraints = NO;
+  _navCameraIndicator.backgroundColor = [UIColor colorWithRed:1.0 green:0.325 blue:0.463 alpha:1.0];
+  _navCameraIndicator.layer.cornerRadius = 1.25;
+  _navCameraIndicator.layer.masksToBounds = YES;
+  [_navCameraContainer addSubview:_navCameraIndicator];
+
+  _navCameraBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+  _navCameraBtn.translatesAutoresizingMaskIntoConstraints = NO;
+  [_navCameraBtn addTarget:self action:@selector(onNavCameraTapped) forControlEvents:UIControlEventTouchUpInside];
+  [_navCameraContainer addSubview:_navCameraBtn];
+
+  [navStack addArrangedSubview:_navCameraContainer];
+
+  // Tab 3: Chats
+  _navChatsBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+  _navChatsBtn.translatesAutoresizingMaskIntoConstraints = NO;
+  [_navChatsBtn setTitle:@"Chats" forState:UIControlStateNormal];
+  [_navChatsBtn setTitleColor:[UIColor colorWithWhite:1.0 alpha:0.6] forState:UIControlStateNormal];
+  _navChatsBtn.titleLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
+  [_navChatsBtn addTarget:self action:@selector(onNavChatsTapped) forControlEvents:UIControlEventTouchUpInside];
+  [navStack addArrangedSubview:_navChatsBtn];
+
   [NSLayoutConstraint activateConstraints:@[
     // Bottom Panel Container
     [_bottomPanelContainer.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
@@ -512,11 +577,10 @@ using namespace gpupixel;
     [_modeVideoBtn.widthAnchor constraintEqualToConstant:72],
 
     // Shutter Row
-    [_shutterRow.topAnchor constraintEqualToAnchor:_modeSwitchTrack.bottomAnchor constant:10],
+    [_shutterRow.topAnchor constraintEqualToAnchor:_modeSwitchTrack.bottomAnchor constant:8],
     [_shutterRow.leadingAnchor constraintEqualToAnchor:_bottomPanelContainer.leadingAnchor constant:20],
     [_shutterRow.trailingAnchor constraintEqualToAnchor:_bottomPanelContainer.trailingAnchor constant:-20],
     [_shutterRow.heightAnchor constraintEqualToConstant:84],
-    [_shutterRow.bottomAnchor constraintEqualToAnchor:_bottomPanelContainer.safeAreaLayoutGuide.bottomAnchor constant:-10],
 
     [_albumButton.leadingAnchor constraintEqualToAnchor:_shutterRow.leadingAnchor],
     [_albumButton.centerYAnchor constraintEqualToAnchor:_shutterRow.centerYAnchor],
@@ -552,6 +616,35 @@ using namespace gpupixel;
     [_flipCameraButton.centerYAnchor constraintEqualToAnchor:_shutterRow.centerYAnchor],
     [_flipCameraButton.widthAnchor constraintEqualToConstant:46],
     [_flipCameraButton.heightAnchor constraintEqualToConstant:46],
+
+    // Bottom Navigation Bar
+    [_bottomNav.topAnchor constraintEqualToAnchor:_shutterRow.bottomAnchor constant:10],
+    [_bottomNav.leadingAnchor constraintEqualToAnchor:_bottomPanelContainer.leadingAnchor constant:16],
+    [_bottomNav.trailingAnchor constraintEqualToAnchor:_bottomPanelContainer.trailingAnchor constant:-16],
+    [_bottomNav.heightAnchor constraintEqualToConstant:34],
+    [_bottomNav.bottomAnchor constraintEqualToAnchor:_bottomPanelContainer.safeAreaLayoutGuide.bottomAnchor constant:-8],
+
+    [navStack.topAnchor constraintEqualToAnchor:_bottomNav.topAnchor],
+    [navStack.bottomAnchor constraintEqualToAnchor:_bottomNav.bottomAnchor],
+    [navStack.leadingAnchor constraintEqualToAnchor:_bottomNav.leadingAnchor],
+    [navStack.trailingAnchor constraintEqualToAnchor:_bottomNav.trailingAnchor],
+
+    [_navMemoriesBtn.heightAnchor constraintEqualToConstant:34],
+    [_navChatsBtn.heightAnchor constraintEqualToConstant:34],
+
+    [_navCameraContainer.heightAnchor constraintEqualToConstant:34],
+    [_navCameraLabel.centerXAnchor constraintEqualToAnchor:_navCameraContainer.centerXAnchor],
+    [_navCameraLabel.centerYAnchor constraintEqualToAnchor:_navCameraContainer.centerYAnchor constant:-4],
+
+    [_navCameraIndicator.topAnchor constraintEqualToAnchor:_navCameraLabel.bottomAnchor constant:3],
+    [_navCameraIndicator.centerXAnchor constraintEqualToAnchor:_navCameraContainer.centerXAnchor],
+    [_navCameraIndicator.widthAnchor constraintEqualToConstant:16],
+    [_navCameraIndicator.heightAnchor constraintEqualToConstant:2.5],
+
+    [_navCameraBtn.topAnchor constraintEqualToAnchor:_navCameraContainer.topAnchor],
+    [_navCameraBtn.bottomAnchor constraintEqualToAnchor:_navCameraContainer.bottomAnchor],
+    [_navCameraBtn.leadingAnchor constraintEqualToAnchor:_navCameraContainer.leadingAnchor],
+    [_navCameraBtn.trailingAnchor constraintEqualToAnchor:_navCameraContainer.trailingAnchor],
   ]];
 }
 
@@ -675,6 +768,22 @@ using namespace gpupixel;
 
 - (void)beautyToolbarViewDidRequestDismiss:(FilterToolbarView*)toolbarView {
   [self collapseBeautyPanel];
+}
+
+#pragma mark - Bottom Nav Actions
+
+- (void)onNavMemoriesTapped {
+  [self onAlbumButtonTapped];
+}
+
+- (void)onNavCameraTapped {
+  if (!self.isPanelCollapsed) {
+    [self collapseBeautyPanel];
+  }
+}
+
+- (void)onNavChatsTapped {
+  [self showToast:@"Chats 功能开发中"];
 }
 
 #pragma mark - UIGestureRecognizerDelegate
