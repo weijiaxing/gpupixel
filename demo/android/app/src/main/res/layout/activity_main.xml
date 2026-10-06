@@ -197,14 +197,22 @@
                     android:paddingTop="4dp"
                     android:paddingBottom="10dp" />
             </HorizontalScrollView>
+        </LinearLayout>
 
-            <!-- Category Tabs (美肤 / 美型 / 美妆 / 滤镜) -->
+        <!-- Shared Track Row: Mode Switcher (Photo|Video) OR Category Tabs -->
+        <FrameLayout
+            android:id="@+id/layout_track_switch"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginBottom="12dp">
+
+            <!-- Category Tabs (美肤 / 美型 / 美妆 / 滤镜 / 贴纸 / 动态) -->
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tab_layout"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
-                android:layout_marginBottom="10dp"
                 android:background="@android:color/transparent"
+                android:visibility="gone"
                 app:tabGravity="center"
                 app:tabIndicatorColor="@color/camera_accent"
                 app:tabIndicatorFullWidth="false"
@@ -214,44 +222,43 @@
                 app:tabSelectedTextColor="@color/white"
                 app:tabTextAppearance="@style/TextAppearance.MaterialComponents.Caption"
                 app:tabTextColor="@color/camera_text_secondary" />
-        </LinearLayout>
 
-        <!-- Mode Switcher: Photo | Video -->
-        <LinearLayout
-            android:id="@+id/layout_mode_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="14dp"
-            android:background="@drawable/bg_mode_switch_track"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="2dp">
-
-            <TextView
-                android:id="@+id/btn_mode_photo"
+            <!-- Mode Switcher: Photo | Video (Default Visible) -->
+            <LinearLayout
+                android:id="@+id/layout_mode_switch"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_mode_switch_selected"
-                android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="Photo"
-                android:textColor="@color/black"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_mode_switch_track"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="2dp">
 
-            <TextView
-                android:id="@+id/btn_mode_video"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="Video"
-                android:textColor="@color/camera_text_secondary"
-                android:textSize="12sp" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/btn_mode_photo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_mode_switch_selected"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Photo"
+                    android:textColor="@color/black"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btn_mode_video"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Video"
+                    android:textColor="@color/camera_text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </FrameLayout>
 
         <!-- Shutter & Controls Row -->
         <RelativeLayout

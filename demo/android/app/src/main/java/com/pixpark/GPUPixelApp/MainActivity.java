@@ -142,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean mHasFaceDetected = false;
     private boolean mIsComparing = false;
     private boolean mIsPanelCollapsed = true;
+    private boolean mIsVideoMode = false;
 
     private SurfaceTexture mCachedSurfaceTexture;
     private int mCachedSurfaceWidth = 0;
@@ -272,6 +273,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Tap on viewfinder preview to dismiss beauty panel if expanded
+        mTextureView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                if (!mIsPanelCollapsed) {
+                    togglePanel();
+                    return true;
+                }
+            }
+            return false;
+        });
+
         // Top bar buttons
         binding.btnSwitch.setOnClickListener(v -> {
             if (mCamera2Helper != null) {
@@ -388,16 +400,22 @@ public class MainActivity extends AppCompatActivity {
 
         // Mode switch (Photo | Video)
         binding.btnModePhoto.setOnClickListener(v -> {
-            binding.btnModePhoto.setBackgroundResource(R.drawable.bg_mode_switch_selected);
-            binding.btnModePhoto.setTextColor(ContextCompat.getColor(this, R.color.black));
-            binding.btnModePhoto.setTypeface(null, android.graphics.Typeface.BOLD);
-
-            binding.btnModeVideo.setBackground(null);
-            binding.btnModeVideo.setTextColor(ContextCompat.getColor(this, R.color.camera_text_secondary));
-            binding.btnModeVideo.setTypeface(null, android.graphics.Typeface.NORMAL);
+            mIsVideoMode = false;
+            updateModeSwitchVisual();
         });
 
         binding.btnModeVideo.setOnClickListener(v -> {
+            mIsVideoMode = true;
+            updateModeSwitchVisual();
+            Toast.makeText(this, "切换至视频录制模式", Toast.LENGTH_SHORT).show();
+        });
+
+        updateModeSwitchVisual();
+        updatePanelToggleUI();
+    }
+
+    private void updateModeSwitchVisual() {
+        if (mIsVideoMode) {
             binding.btnModeVideo.setBackgroundResource(R.drawable.bg_mode_switch_selected);
             binding.btnModeVideo.setTextColor(ContextCompat.getColor(this, R.color.black));
             binding.btnModeVideo.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -405,11 +423,15 @@ public class MainActivity extends AppCompatActivity {
             binding.btnModePhoto.setBackground(null);
             binding.btnModePhoto.setTextColor(ContextCompat.getColor(this, R.color.camera_text_secondary));
             binding.btnModePhoto.setTypeface(null, android.graphics.Typeface.NORMAL);
+        } else {
+            binding.btnModePhoto.setBackgroundResource(R.drawable.bg_mode_switch_selected);
+            binding.btnModePhoto.setTextColor(ContextCompat.getColor(this, R.color.black));
+            binding.btnModePhoto.setTypeface(null, android.graphics.Typeface.BOLD);
 
-            Toast.makeText(this, "切换至视频录制模式", Toast.LENGTH_SHORT).show();
-        });
-
-        updatePanelToggleUI();
+            binding.btnModeVideo.setBackground(null);
+            binding.btnModeVideo.setTextColor(ContextCompat.getColor(this, R.color.camera_text_secondary));
+            binding.btnModeVideo.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
     }
 
     private void togglePanel() {
@@ -425,7 +447,64 @@ public class MainActivity extends AppCompatActivity {
                 binding.layoutSlider.setVisibility(View.GONE);
             }
         }
+
+        animateTrackTransition(!mIsPanelCollapsed);
         updatePanelToggleUI();
+    }
+
+    private void animateTrackTransition(boolean showTabs) {
+        final View modeSwitch = binding.layoutModeSwitch;
+        final View tabLayout = binding.tabLayout;
+        final long duration = 260;
+        final android.view.animation.Interpolator interpolator = new android.view.animation.DecelerateInterpolator();
+
+        if (showTabs) {
+            // Mode switch slides to the right and fades out
+            modeSwitch.animate()
+                    .translationX(120f)
+                    .alpha(0f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .withEndAction(() -> {
+                        modeSwitch.setVisibility(View.GONE);
+                        modeSwitch.setTranslationX(0f);
+                    })
+                    .start();
+
+            // Tabs slide in from left to center and fade in
+            tabLayout.setVisibility(View.VISIBLE);
+            tabLayout.setAlpha(0f);
+            tabLayout.setTranslationX(-60f);
+            tabLayout.animate()
+                    .translationX(0f)
+                    .alpha(1f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .start();
+        } else {
+            // Tabs slide left and fade out
+            tabLayout.animate()
+                    .translationX(-60f)
+                    .alpha(0f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .withEndAction(() -> {
+                        tabLayout.setVisibility(View.GONE);
+                        tabLayout.setTranslationX(0f);
+                    })
+                    .start();
+
+            // Mode switch slides back in from right and fades in
+            modeSwitch.setVisibility(View.VISIBLE);
+            modeSwitch.setAlpha(0f);
+            modeSwitch.setTranslationX(120f);
+            modeSwitch.animate()
+                    .translationX(0f)
+                    .alpha(1f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .start();
+        }
     }
 
     private void updatePanelToggleUI() {
