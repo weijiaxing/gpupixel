@@ -91,6 +91,34 @@ using namespace gpupixel;
 
 @end
 
+#pragma mark - Bottom Scrim View (Aligned with Android bg_bottom_scrim gradient)
+
+@interface BottomScrimView : UIView
+@end
+
+@implementation BottomScrimView
++ (Class)layerClass {
+  return [CAGradientLayer class];
+}
+
+- (instancetype)initWithFrame:(CGRect)frame {
+  self = [super initWithFrame:frame];
+  if (self) {
+    CAGradientLayer* layer = (CAGradientLayer*)self.layer;
+    // Android bg_bottom_scrim: angle 270 (top to bottom), #00000000 -> #66000000 -> #D9000000
+    layer.colors = @[
+      (id)[UIColor colorWithWhite:0.0 alpha:0.0].CGColor,
+      (id)[UIColor colorWithWhite:0.0 alpha:0.40].CGColor,
+      (id)[UIColor colorWithWhite:0.0 alpha:0.85].CGColor
+    ];
+    layer.locations = @[@0.0, @0.35, @1.0];
+    layer.startPoint = CGPointMake(0.5, 0.0);
+    layer.endPoint = CGPointMake(0.5, 1.0);
+  }
+  return self;
+}
+@end
+
 @implementation VideoFilterController
 
 #pragma mark - Life cycle
@@ -266,7 +294,7 @@ using namespace gpupixel;
 - (void)setupTopBar {
   _topBarView = [[UIView alloc] init];
   _topBarView.translatesAutoresizingMaskIntoConstraints = NO;
-  _topBarView.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.35];
+  _topBarView.backgroundColor = [UIColor clearColor]; // Android: transparent without gray background
   [self.view addSubview:_topBarView];
 
   // 1. Switch Camera Button
@@ -278,7 +306,7 @@ using namespace gpupixel;
   _switchCameraButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.13].CGColor;
   _switchCameraButton.layer.masksToBounds = YES;
   UIImage* switchIcon = [UIImage imageNamed:@"ic_switch_camera"];
-  if (!switchIcon && @available(iOS 13.0, *)) {
+  if (!switchIcon) {
     switchIcon = [UIImage systemImageNamed:@"camera.rotate.fill"];
   }
   [_switchCameraButton setImage:switchIcon forState:UIControlStateNormal];
@@ -312,7 +340,7 @@ using namespace gpupixel;
   UIImageView* resetIconView = [[UIImageView alloc] init];
   resetIconView.translatesAutoresizingMaskIntoConstraints = NO;
   UIImage* resetIcon = [UIImage imageNamed:@"ic_reset"];
-  if (!resetIcon && @available(iOS 13.0, *)) {
+  if (!resetIcon) {
     resetIcon = [UIImage systemImageNamed:@"arrow.counterclockwise"];
   }
   resetIconView.image = resetIcon;
@@ -391,7 +419,7 @@ using namespace gpupixel;
   UIImageView* cmpIconView = [[UIImageView alloc] init];
   cmpIconView.translatesAutoresizingMaskIntoConstraints = NO;
   UIImage* cmpIcon = [UIImage imageNamed:@"ic_compare"];
-  if (!cmpIcon && @available(iOS 13.0, *)) {
+  if (!cmpIcon) {
     cmpIcon = [UIImage systemImageNamed:@"square.split.2x1"];
   }
   cmpIconView.image = cmpIcon;
@@ -432,9 +460,8 @@ using namespace gpupixel;
 }
 
 - (void)setupBottomPanel {
-  _bottomPanelContainer = [[UIView alloc] init];
+  _bottomPanelContainer = [[BottomScrimView alloc] initWithFrame:CGRectZero];
   _bottomPanelContainer.translatesAutoresizingMaskIntoConstraints = NO;
-  _bottomPanelContainer.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.45];
   [self.view addSubview:_bottomPanelContainer];
 
   // 1. Mode Switch: Photo | Video
@@ -531,11 +558,13 @@ using namespace gpupixel;
   // Flip Camera Button (Right)
   _flipCameraButton = [UIButton buttonWithType:UIButtonTypeCustom];
   _flipCameraButton.translatesAutoresizingMaskIntoConstraints = NO;
-  _flipCameraButton.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.18];
+  _flipCameraButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.27];
   _flipCameraButton.layer.cornerRadius = 23.0;
+  _flipCameraButton.layer.borderWidth = 1.0;
+  _flipCameraButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.13].CGColor;
   _flipCameraButton.layer.masksToBounds = YES;
   UIImage* flipIcon = [UIImage imageNamed:@"ic_switch_camera"];
-  if (!flipIcon && @available(iOS 13.0, *)) {
+  if (!flipIcon) {
     flipIcon = [UIImage systemImageNamed:@"camera.rotate.fill"];
   }
   [_flipCameraButton setImage:flipIcon forState:UIControlStateNormal];
