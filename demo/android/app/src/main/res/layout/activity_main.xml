@@ -129,136 +129,42 @@
         android:paddingTop="12dp"
         android:paddingBottom="12dp">
 
-        <!-- Beauty Adjust Container (Collapsible) -->
+        <!-- Mode Switcher: Photo | Video (Default Visible, Hidden when beauty expanded) -->
         <LinearLayout
-            android:id="@+id/layout_beauty_controls"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:id="@+id/layout_mode_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_mode_switch_track"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="2dp">
 
-            <!-- Active Slider Row -->
-            <LinearLayout
-                android:id="@+id/layout_slider"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingBottom="10dp">
-
-                <TextView
-                    android:id="@+id/tv_slider_label"
-                    android:layout_width="48dp"
-                    android:layout_height="wrap_content"
-                    android:text="磨皮"
-                    android:textColor="@color/white"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <SeekBar
-                    android:id="@+id/active_seekbar"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="100"
-                    android:progress="0"
-                    android:progressDrawable="@drawable/bg_seekbar_track"
-                    android:thumb="@drawable/bg_seekbar_thumb" />
-
-                <TextView
-                    android:id="@+id/tv_slider_value"
-                    android:layout_width="44dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:text="0%"
-                    android:textColor="@color/camera_accent"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- Horizontal Beauty Items List -->
-            <HorizontalScrollView
-                android:id="@+id/scroll_items"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:overScrollMode="never"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:id="@+id/layout_items_container"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="10dp" />
-            </HorizontalScrollView>
-        </LinearLayout>
-
-        <!-- Shared Track Row: Mode Switcher (Photo|Video) OR Category Tabs -->
-        <FrameLayout
-            android:id="@+id/layout_track_switch"
-            android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:layout_marginBottom="12dp">
-
-            <!-- Category Tabs (美肤 / 美型 / 美妆 / 滤镜 / 贴纸 / 动态) -->
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tab_layout"
-                android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:background="@android:color/transparent"
-                android:visibility="gone"
-                app:tabGravity="center"
-                app:tabIndicatorColor="@color/camera_accent"
-                app:tabIndicatorFullWidth="false"
-                app:tabIndicatorHeight="2.5dp"
-                app:tabMode="fixed"
-                app:tabRippleColor="@null"
-                app:tabSelectedTextColor="@color/white"
-                app:tabTextAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                app:tabTextColor="@color/camera_text_secondary" />
-
-            <!-- Mode Switcher: Photo | Video (Default Visible) -->
-            <LinearLayout
-                android:id="@+id/layout_mode_switch"
+            <TextView
+                android:id="@+id/btn_mode_photo"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:layout_gravity="center"
-                android:background="@drawable/bg_mode_switch_track"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="2dp">
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_mode_switch_selected"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Photo"
+                android:textColor="@color/black"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/btn_mode_photo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/bg_mode_switch_selected"
-                    android:gravity="center"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:text="Photo"
-                    android:textColor="@color/black"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/btn_mode_video"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:text="Video"
-                    android:textColor="@color/camera_text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </FrameLayout>
+            <TextView
+                android:id="@+id/btn_mode_video"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Video"
+                android:textColor="@color/camera_text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <!-- Shutter & Controls Row -->
         <RelativeLayout
@@ -337,6 +243,95 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_switch_camera" />
         </RelativeLayout>
+
+        <!-- Beauty Adjust Container (Collapsible, placed underneath mini shutter) -->
+        <LinearLayout
+            android:id="@+id/layout_beauty_controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Active Slider Row -->
+            <LinearLayout
+                android:id="@+id/layout_slider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="6dp">
+
+                <TextView
+                    android:id="@+id/tv_slider_label"
+                    android:layout_width="48dp"
+                    android:layout_height="wrap_content"
+                    android:text="磨皮"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/active_seekbar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/bg_seekbar_track"
+                    android:thumb="@drawable/bg_seekbar_thumb" />
+
+                <TextView
+                    android:id="@+id/tv_slider_value"
+                    android:layout_width="44dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text="0%"
+                    android:textColor="@color/camera_accent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Horizontal Beauty Items List -->
+            <HorizontalScrollView
+                android:id="@+id/scroll_items"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:overScrollMode="never"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/layout_items_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="8dp" />
+            </HorizontalScrollView>
+
+            <!-- Category Tabs (美肤 / 美型 / 美妆 / 滤镜 / 贴纸 / 动态, docked at bottom) -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tab_layout"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="4dp"
+                android:background="@android:color/transparent"
+                app:tabGravity="center"
+                app:tabIndicatorColor="@color/camera_accent"
+                app:tabIndicatorFullWidth="false"
+                app:tabIndicatorHeight="2.5dp"
+                app:tabMode="fixed"
+                app:tabRippleColor="@null"
+                app:tabSelectedTextColor="@color/white"
+                app:tabTextAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                app:tabTextColor="@color/camera_text_secondary" />
+        </LinearLayout>
 
         <!-- Bottom Navigation Bar (Text Only): Memories | Camera | Chats -->
         <LinearLayout

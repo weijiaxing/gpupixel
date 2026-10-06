@@ -436,79 +436,170 @@ public class MainActivity extends AppCompatActivity {
 
     private void togglePanel() {
         mIsPanelCollapsed = !mIsPanelCollapsed;
+        final long duration = 260;
+        final android.view.animation.Interpolator interpolator = new android.view.animation.DecelerateInterpolator();
+        final float density = getResources().getDisplayMetrics().density;
+
         TransitionManager.beginDelayedTransition(binding.bottomPanel);
-        binding.layoutBeautyControls.setVisibility(mIsPanelCollapsed ? View.GONE : View.VISIBLE);
 
         if (!mIsPanelCollapsed) {
+            // EXPAND BEAUTY PANEL
+            // 1. Shutter button shrinks and floats above beauty controls
+            binding.btnCapture.animate()
+                    .scaleX(0.65f)
+                    .scaleY(0.65f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .start();
+
+            // 2. Beauty wand translates to stay snugly beside mini shutter
+            binding.layoutBeautyWand.animate()
+                    .translationX(-11f * density)
+                    .translationY(8f * density)
+                    .scaleX(0.88f)
+                    .scaleY(0.88f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .start();
+
+            // 3. Album & flip camera fade out to focus attention
+            binding.btnAlbum.animate().cancel();
+            binding.btnAlbum.animate()
+                    .alpha(0f)
+                    .setDuration(duration)
+                    .withEndAction(() -> binding.btnAlbum.setVisibility(View.INVISIBLE))
+                    .start();
+
+            binding.btnSwitchCameraBottom.animate().cancel();
+            binding.btnSwitchCameraBottom.animate()
+                    .alpha(0f)
+                    .setDuration(duration)
+                    .withEndAction(() -> binding.btnSwitchCameraBottom.setVisibility(View.INVISIBLE))
+                    .start();
+
+            // 4. Mode switcher slides up and fades out
+            binding.layoutModeSwitch.animate().cancel();
+            binding.layoutModeSwitch.animate()
+                    .alpha(0f)
+                    .translationY(-16f * density)
+                    .setDuration(duration)
+                    .withEndAction(() -> {
+                        binding.layoutModeSwitch.setVisibility(View.GONE);
+                        binding.layoutModeSwitch.setTranslationY(0f);
+                    })
+                    .start();
+
+            // 5. Bottom nav (Memories | Camera | Chats) slides down and fades out
+            binding.bottomNav.animate().cancel();
+            binding.bottomNav.animate()
+                    .alpha(0f)
+                    .translationY(16f * density)
+                    .setDuration(duration)
+                    .withEndAction(() -> {
+                        binding.bottomNav.setVisibility(View.GONE);
+                        binding.bottomNav.setTranslationY(0f);
+                    })
+                    .start();
+
+            // 6. Beauty controls container (slider -> items -> category tabs) appears
             int selectedTab = binding.tabLayout.getSelectedTabPosition();
             if (selectedTab != CAT_FILTER && selectedTab != CAT_STICKER && selectedTab != CAT_ANIM_STICKER) {
                 binding.layoutSlider.setVisibility(View.VISIBLE);
             } else {
                 binding.layoutSlider.setVisibility(View.GONE);
             }
-        }
 
-        animateTrackTransition(!mIsPanelCollapsed);
-        updatePanelToggleUI();
-    }
-
-    private void animateTrackTransition(boolean showTabs) {
-        final View modeSwitch = binding.layoutModeSwitch;
-        final View tabLayout = binding.tabLayout;
-        final long duration = 260;
-        final android.view.animation.Interpolator interpolator = new android.view.animation.DecelerateInterpolator();
-
-        if (showTabs) {
-            // Mode switch slides to the right and fades out
-            modeSwitch.animate()
-                    .translationX(120f)
-                    .alpha(0f)
-                    .setDuration(duration)
-                    .setInterpolator(interpolator)
-                    .withEndAction(() -> {
-                        modeSwitch.setVisibility(View.GONE);
-                        modeSwitch.setTranslationX(0f);
-                    })
-                    .start();
-
-            // Tabs slide in from left to center and fade in
-            tabLayout.setVisibility(View.VISIBLE);
-            tabLayout.setAlpha(0f);
-            tabLayout.setTranslationX(-60f);
-            tabLayout.animate()
-                    .translationX(0f)
+            binding.layoutBeautyControls.setVisibility(View.VISIBLE);
+            binding.layoutBeautyControls.setAlpha(0f);
+            binding.layoutBeautyControls.setTranslationY(24f * density);
+            binding.layoutBeautyControls.animate().cancel();
+            binding.layoutBeautyControls.animate()
                     .alpha(1f)
+                    .translationY(0f)
                     .setDuration(duration)
                     .setInterpolator(interpolator)
                     .start();
+
         } else {
-            // Tabs slide left and fade out
-            tabLayout.animate()
-                    .translationX(-60f)
-                    .alpha(0f)
+            // COLLAPSE BEAUTY PANEL
+            // 1. Shutter button scales back to full size
+            binding.btnCapture.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
                     .setDuration(duration)
                     .setInterpolator(interpolator)
-                    .withEndAction(() -> {
-                        tabLayout.setVisibility(View.GONE);
-                        tabLayout.setTranslationX(0f);
-                    })
                     .start();
 
-            // Mode switch slides back in from right and fades in
-            modeSwitch.setVisibility(View.VISIBLE);
-            modeSwitch.setAlpha(0f);
-            modeSwitch.setTranslationX(120f);
-            modeSwitch.animate()
+            // 2. Beauty wand returns to normal position and scale
+            binding.layoutBeautyWand.animate()
                     .translationX(0f)
-                    .alpha(1f)
+                    .translationY(0f)
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
                     .setDuration(duration)
                     .setInterpolator(interpolator)
                     .start();
+
+            // 3. Album & flip camera fade back in
+            binding.btnAlbum.animate().cancel();
+            binding.btnAlbum.setVisibility(View.VISIBLE);
+            binding.btnAlbum.animate()
+                    .alpha(1f)
+                    .setDuration(duration)
+                    .start();
+
+            binding.btnSwitchCameraBottom.animate().cancel();
+            binding.btnSwitchCameraBottom.setVisibility(View.VISIBLE);
+            binding.btnSwitchCameraBottom.animate()
+                    .alpha(1f)
+                    .setDuration(duration)
+                    .start();
+
+            // 4. Mode switcher slides back down and fades in
+            binding.layoutModeSwitch.animate().cancel();
+            binding.layoutModeSwitch.setVisibility(View.VISIBLE);
+            binding.layoutModeSwitch.setAlpha(0f);
+            binding.layoutModeSwitch.setTranslationY(-16f * density);
+            binding.layoutModeSwitch.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .start();
+
+            // 5. Bottom nav slides back up and fades in
+            binding.bottomNav.animate().cancel();
+            binding.bottomNav.setVisibility(View.VISIBLE);
+            binding.bottomNav.setAlpha(0f);
+            binding.bottomNav.setTranslationY(16f * density);
+            binding.bottomNav.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .start();
+
+            // 6. Beauty controls container hides smoothly
+            binding.layoutBeautyControls.animate().cancel();
+            binding.layoutBeautyControls.animate()
+                    .alpha(0f)
+                    .translationY(24f * density)
+                    .setDuration(duration)
+                    .withEndAction(() -> {
+                        binding.layoutBeautyControls.setVisibility(View.GONE);
+                        binding.layoutBeautyControls.setTranslationY(0f);
+                    })
+                    .start();
         }
+
+        updatePanelToggleUI();
     }
 
     private void updatePanelToggleUI() {
         binding.btnTogglePanel.setSelected(!mIsPanelCollapsed);
+        if (binding.viewBeautyBadge != null) {
+            binding.viewBeautyBadge.setVisibility(mIsPanelCollapsed ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void updateFlashlightIcon() {
@@ -574,9 +665,13 @@ public class MainActivity extends AppCompatActivity {
             }
         } else if (category == CAT_FILTER || category == CAT_STICKER || category == CAT_ANIM_STICKER) {
             // For filter/sticker/anim tab, hide the slider
-            binding.layoutSlider.setVisibility(View.GONE);
+            if (binding.layoutSlider.getVisibility() != View.GONE) {
+                TransitionManager.beginDelayedTransition(binding.bottomPanel);
+                binding.layoutSlider.setVisibility(View.GONE);
+            }
         } else {
-            if (!mIsPanelCollapsed) {
+            if (!mIsPanelCollapsed && binding.layoutSlider.getVisibility() != View.VISIBLE) {
+                TransitionManager.beginDelayedTransition(binding.bottomPanel);
                 binding.layoutSlider.setVisibility(View.VISIBLE);
             }
         }
@@ -596,7 +691,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void selectBeautyOption(BeautyOption option) {
         mSelectedOption = option;
-        if (!mIsPanelCollapsed) {
+        if (!mIsPanelCollapsed && binding.layoutSlider.getVisibility() != View.VISIBLE) {
+            TransitionManager.beginDelayedTransition(binding.bottomPanel);
             binding.layoutSlider.setVisibility(View.VISIBLE);
         }
         binding.tvSliderLabel.setText(option.name);
@@ -1227,6 +1323,22 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "正在保存中...", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        // Shutter tap feedback animation
+        float currentScale = mIsPanelCollapsed ? 1.0f : 0.65f;
+        binding.btnCapture.animate()
+                .scaleX(currentScale * 0.88f)
+                .scaleY(currentScale * 0.88f)
+                .setDuration(70)
+                .withEndAction(() -> {
+                    binding.btnCapture.animate()
+                            .scaleX(currentScale)
+                            .scaleY(currentScale)
+                            .setDuration(70)
+                            .start();
+                })
+                .start();
+
         mCaptureRequested = true;
         Toast.makeText(this, "📷 拍照成功，正在保存", Toast.LENGTH_SHORT).show();
     }
