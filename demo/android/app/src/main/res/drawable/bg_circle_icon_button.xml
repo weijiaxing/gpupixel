@@ -5,6 +5,12 @@
             <solid android:color="#88000000" />
         </shape>
     </item>
+    <item android:state_selected="true">
+        <shape android:shape="oval">
+            <solid android:color="#4DFF5376" />
+            <stroke android:width="1.5dp" android:color="@color/camera_accent" />
+        </shape>
+    </item>
     <item>
         <shape android:shape="oval">
             <solid android:color="#44000000" />

@@ -10,6 +10,7 @@ import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraCharacteristics;
 import android.os.Bundle;
 import android.util.Log;
+import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -308,13 +309,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Panel collapse/expand toggle
-        binding.btnTogglePanel.setOnClickListener(v -> {
-            mIsPanelCollapsed = !mIsPanelCollapsed;
-            int visibility = mIsPanelCollapsed ? View.GONE : View.VISIBLE;
-            binding.layoutSlider.setVisibility(visibility);
-            binding.scrollItems.setVisibility(visibility);
-            binding.tabLayout.setVisibility(visibility);
-        });
+        binding.btnTogglePanel.setOnClickListener(v -> togglePanel());
 
         // Shutter capture button
         binding.btnCapture.setOnClickListener(v -> requestCapture());
@@ -364,6 +359,31 @@ public class MainActivity extends AppCompatActivity {
 
         // Populate initial category: 美肤
         refreshItemsForCategory(CAT_SKIN);
+        updatePanelToggleUI();
+    }
+
+    private void togglePanel() {
+        mIsPanelCollapsed = !mIsPanelCollapsed;
+        TransitionManager.beginDelayedTransition(binding.bottomPanel);
+        int visibility = mIsPanelCollapsed ? View.GONE : View.VISIBLE;
+        binding.scrollItems.setVisibility(visibility);
+        binding.tabLayout.setVisibility(visibility);
+
+        if (mIsPanelCollapsed) {
+            binding.layoutSlider.setVisibility(View.GONE);
+        } else {
+            int selectedTab = binding.tabLayout.getSelectedTabPosition();
+            if (selectedTab != CAT_FILTER && selectedTab != CAT_STICKER && selectedTab != CAT_ANIM_STICKER) {
+                binding.layoutSlider.setVisibility(View.VISIBLE);
+            } else {
+                binding.layoutSlider.setVisibility(View.GONE);
+            }
+        }
+        updatePanelToggleUI();
+    }
+
+    private void updatePanelToggleUI() {
+        binding.btnTogglePanel.setSelected(!mIsPanelCollapsed);
     }
 
     private void updateFlashlightIcon() {
@@ -431,7 +451,9 @@ public class MainActivity extends AppCompatActivity {
             // For filter/sticker/anim tab, hide the slider
             binding.layoutSlider.setVisibility(View.GONE);
         } else {
-            binding.layoutSlider.setVisibility(View.VISIBLE);
+            if (!mIsPanelCollapsed) {
+                binding.layoutSlider.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -447,7 +469,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void selectBeautyOption(BeautyOption option) {
         mSelectedOption = option;
-        binding.layoutSlider.setVisibility(View.VISIBLE);
+        if (!mIsPanelCollapsed) {
+            binding.layoutSlider.setVisibility(View.VISIBLE);
+        }
         binding.tvSliderLabel.setText(option.name);
         binding.activeSeekbar.setProgress(option.progress);
         binding.tvSliderValue.setText(option.progress + "%");

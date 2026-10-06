@@ -215,17 +215,6 @@
             android:paddingStart="24dp"
             android:paddingEnd="24dp">
 
-            <!-- Panel Collapse / Expand Button -->
-            <ImageButton
-                android:id="@+id/btn_toggle_panel"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:background="@drawable/bg_circle_icon_button"
-                android:contentDescription="Toggle Panel"
-                android:src="@drawable/ic_beauty_wand" />
-
             <!-- Capture Shutter Button -->
             <FrameLayout
                 android:id="@+id/btn_capture"
@@ -240,6 +229,17 @@
                     android:layout_gravity="center"
                     android:background="@drawable/bg_shutter_inner" />
             </FrameLayout>
+
+            <!-- Beauty Panel Toggle Button (Horizontal Right / Bottom Right) -->
+            <ImageButton
+                android:id="@+id/btn_toggle_panel"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_circle_icon_button"
+                android:contentDescription="Toggle Panel"
+                android:src="@drawable/ic_beauty_wand" />
         </RelativeLayout>
     </LinearLayout>
 
