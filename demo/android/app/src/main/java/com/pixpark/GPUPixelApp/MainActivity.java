@@ -16,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -273,16 +274,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Tap on viewfinder preview to dismiss beauty panel if expanded
-        mTextureView.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                if (!mIsPanelCollapsed) {
-                    togglePanel();
-                    return true;
-                }
-            }
-            return false;
-        });
 
         // Top bar buttons
         binding.btnSwitch.setOnClickListener(v -> {
@@ -1359,6 +1350,51 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "需要相机权限才能使用美颜相机！", LENGTH_LONG).show();
             }
         }
+    }
+
+    private float mDownX;
+    private float mDownY;
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (!mIsPanelCollapsed) {
+            if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+                mDownX = ev.getRawX();
+                mDownY = ev.getRawY();
+            } else if (ev.getAction() == MotionEvent.ACTION_UP) {
+                float dx = Math.abs(ev.getRawX() - mDownX);
+                float dy = Math.abs(ev.getRawY() - mDownY);
+                int touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
+
+                // If it's a tap gesture (not a swipe or drag)
+                if (dx < touchSlop && dy < touchSlop) {
+                    float rawX = ev.getRawX();
+                    float rawY = ev.getRawY();
+
+                    // Check if tap was outside bottomPanel
+                    if (!isTouchInsideView(binding.bottomPanel, rawX, rawY)) {
+                        // Check if tap was on top bar or compare button
+                        if (!isTouchInsideView(binding.topBar, rawX, rawY) &&
+                            !isTouchInsideView(binding.btnCompare, rawX, rawY)) {
+                            togglePanel();
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private boolean isTouchInsideView(View view, float rawX, float rawY) {
+        if (view == null || view.getVisibility() != View.VISIBLE) return false;
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        int x = location[0];
+        int y = location[1];
+        int w = view.getWidth();
+        int h = view.getHeight();
+        return rawX >= x && rawX <= (x + w) && rawY >= y && rawY <= (y + h);
     }
 
     @Override
