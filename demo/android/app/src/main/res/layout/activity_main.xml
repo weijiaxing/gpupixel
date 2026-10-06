@@ -70,53 +70,6 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <!-- Compare Button (Long press to see original) -->
-    <LinearLayout
-        android:id="@+id/btn_compare"
-        android:layout_width="wrap_content"
-        android:layout_height="38dp"
-        android:layout_above="@id/bottom_panel"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_pill_button"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingEnd="16dp">
-
-        <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:src="@drawable/ic_compare" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:text="按住对比"
-            android:textColor="@color/white"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Face Status Indicator -->
-    <TextView
-        android:id="@+id/tv_face_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/bottom_panel"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="20dp"
-        android:layout_marginBottom="22dp"
-        android:background="@drawable/bg_pill_button"
-        android:paddingStart="12dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="4dp"
-        android:text="人脸检测中..."
-        android:textColor="@color/camera_text_secondary"
-        android:textSize="11sp" />
 
     <!-- Bottom Panel Container (FrameLayout prevents height ballooning and jitter) -->
     <FrameLayout
@@ -335,7 +288,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Layer 2: Beauty Tuning Controls (Slider, Items, Category Tabs) -->
+        <!-- Layer 2: Beauty Tuning Controls (Header, Slider, Items, Category Tabs) -->
         <LinearLayout
             android:id="@+id/layout_beauty_controls"
             android:layout_width="match_parent"
@@ -343,6 +296,62 @@
             android:layout_gravity="bottom"
             android:orientation="vertical"
             android:visibility="gone">
+
+            <!-- Top Header: Face Status (Left) & Compare Button (Right) -->
+            <RelativeLayout
+                android:id="@+id/layout_beauty_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp">
+
+                <!-- Face Status Indicator -->
+                <TextView
+                    android:id="@+id/tv_face_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/bg_pill_button"
+                    android:paddingStart="12dp"
+                    android:paddingTop="5dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="5dp"
+                    android:text="人脸检测中..."
+                    android:textColor="@color/camera_text_secondary"
+                    android:textSize="11sp" />
+
+                <!-- Compare Button (Long press to see original) -->
+                <LinearLayout
+                    android:id="@+id/btn_compare"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/bg_pill_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="16dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_compare" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="按住对比"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </RelativeLayout>
 
             <!-- Active Slider Row -->
             <LinearLayout

@@ -300,12 +300,22 @@ public class MainActivity extends AppCompatActivity {
                     mIsComparing = true;
                     applyCompareMode(true);
                     binding.btnCompare.setBackgroundResource(R.drawable.bg_item_circle_selected);
+                    binding.btnCompare.animate()
+                            .scaleX(0.92f)
+                            .scaleY(0.92f)
+                            .setDuration(100)
+                            .start();
                     return true;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
                     mIsComparing = false;
                     applyCompareMode(false);
                     binding.btnCompare.setBackgroundResource(R.drawable.bg_pill_button);
+                    binding.btnCompare.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(120)
+                            .start();
                     return true;
             }
             return false;
