@@ -322,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Panel collapse/expand toggle
         binding.btnTogglePanel.setOnClickListener(v -> togglePanel());
+        binding.btnCloseBeauty.setOnClickListener(v -> togglePanel());
 
         // Shutter capture button
         binding.btnCapture.setOnClickListener(v -> requestCapture());
@@ -443,41 +444,20 @@ public class MainActivity extends AppCompatActivity {
         TransitionManager.beginDelayedTransition(binding.bottomPanel);
 
         if (!mIsPanelCollapsed) {
-            // EXPAND BEAUTY PANEL
-            // 1. Shutter button shrinks and floats above beauty controls
-            binding.btnCapture.animate()
-                    .scaleX(0.65f)
-                    .scaleY(0.65f)
-                    .setDuration(duration)
-                    .setInterpolator(interpolator)
-                    .start();
-
-            // 2. Beauty wand translates to stay snugly beside mini shutter
-            binding.layoutBeautyWand.animate()
-                    .translationX(-11f * density)
-                    .translationY(8f * density)
-                    .scaleX(0.88f)
-                    .scaleY(0.88f)
-                    .setDuration(duration)
-                    .setInterpolator(interpolator)
-                    .start();
-
-            // 3. Album & flip camera fade out to focus attention
-            binding.btnAlbum.animate().cancel();
-            binding.btnAlbum.animate()
+            // EXPAND BEAUTY PANEL (Tuning Mode: Douyin / Xingtu Style)
+            // 1. Shutter row (large shutter, album, wand, flip camera) slides down and hides
+            binding.layoutShutter.animate().cancel();
+            binding.layoutShutter.animate()
                     .alpha(0f)
+                    .translationY(30f * density)
                     .setDuration(duration)
-                    .withEndAction(() -> binding.btnAlbum.setVisibility(View.INVISIBLE))
+                    .withEndAction(() -> {
+                        binding.layoutShutter.setVisibility(View.GONE);
+                        binding.layoutShutter.setTranslationY(0f);
+                    })
                     .start();
 
-            binding.btnSwitchCameraBottom.animate().cancel();
-            binding.btnSwitchCameraBottom.animate()
-                    .alpha(0f)
-                    .setDuration(duration)
-                    .withEndAction(() -> binding.btnSwitchCameraBottom.setVisibility(View.INVISIBLE))
-                    .start();
-
-            // 4. Mode switcher slides up and fades out
+            // 2. Mode switcher (Photo | Video) slides up and hides
             binding.layoutModeSwitch.animate().cancel();
             binding.layoutModeSwitch.animate()
                     .alpha(0f)
@@ -489,7 +469,7 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .start();
 
-            // 5. Bottom nav (Memories | Camera | Chats) slides down and fades out
+            // 3. Bottom nav (Memories | Camera | Chats) slides down and hides
             binding.bottomNav.animate().cancel();
             binding.bottomNav.animate()
                     .alpha(0f)
@@ -501,7 +481,7 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .start();
 
-            // 6. Beauty controls container (slider -> items -> category tabs) appears
+            // 4. Beauty controls container (Slider -> Items -> Category Tabs + Close) smoothly slides up
             int selectedTab = binding.tabLayout.getSelectedTabPosition();
             if (selectedTab != CAT_FILTER && selectedTab != CAT_STICKER && selectedTab != CAT_ANIM_STICKER) {
                 binding.layoutSlider.setVisibility(View.VISIBLE);
@@ -511,7 +491,7 @@ public class MainActivity extends AppCompatActivity {
 
             binding.layoutBeautyControls.setVisibility(View.VISIBLE);
             binding.layoutBeautyControls.setAlpha(0f);
-            binding.layoutBeautyControls.setTranslationY(24f * density);
+            binding.layoutBeautyControls.setTranslationY(30f * density);
             binding.layoutBeautyControls.animate().cancel();
             binding.layoutBeautyControls.animate()
                     .alpha(1f)
@@ -521,41 +501,32 @@ public class MainActivity extends AppCompatActivity {
                     .start();
 
         } else {
-            // COLLAPSE BEAUTY PANEL
-            // 1. Shutter button scales back to full size
-            binding.btnCapture.animate()
-                    .scaleX(1.0f)
-                    .scaleY(1.0f)
+            // COLLAPSE BEAUTY PANEL (Return to Full Camera Shooting Mode)
+            // 1. Beauty controls container slides down and hides
+            binding.layoutBeautyControls.animate().cancel();
+            binding.layoutBeautyControls.animate()
+                    .alpha(0f)
+                    .translationY(30f * density)
                     .setDuration(duration)
-                    .setInterpolator(interpolator)
+                    .withEndAction(() -> {
+                        binding.layoutBeautyControls.setVisibility(View.GONE);
+                        binding.layoutBeautyControls.setTranslationY(0f);
+                    })
                     .start();
 
-            // 2. Beauty wand returns to normal position and scale
-            binding.layoutBeautyWand.animate()
-                    .translationX(0f)
+            // 2. Shutter row slides back up into view
+            binding.layoutShutter.animate().cancel();
+            binding.layoutShutter.setVisibility(View.VISIBLE);
+            binding.layoutShutter.setAlpha(0f);
+            binding.layoutShutter.setTranslationY(30f * density);
+            binding.layoutShutter.animate()
+                    .alpha(1f)
                     .translationY(0f)
-                    .scaleX(1.0f)
-                    .scaleY(1.0f)
                     .setDuration(duration)
                     .setInterpolator(interpolator)
                     .start();
 
-            // 3. Album & flip camera fade back in
-            binding.btnAlbum.animate().cancel();
-            binding.btnAlbum.setVisibility(View.VISIBLE);
-            binding.btnAlbum.animate()
-                    .alpha(1f)
-                    .setDuration(duration)
-                    .start();
-
-            binding.btnSwitchCameraBottom.animate().cancel();
-            binding.btnSwitchCameraBottom.setVisibility(View.VISIBLE);
-            binding.btnSwitchCameraBottom.animate()
-                    .alpha(1f)
-                    .setDuration(duration)
-                    .start();
-
-            // 4. Mode switcher slides back down and fades in
+            // 3. Mode switcher slides back down into view
             binding.layoutModeSwitch.animate().cancel();
             binding.layoutModeSwitch.setVisibility(View.VISIBLE);
             binding.layoutModeSwitch.setAlpha(0f);
@@ -567,7 +538,7 @@ public class MainActivity extends AppCompatActivity {
                     .setInterpolator(interpolator)
                     .start();
 
-            // 5. Bottom nav slides back up and fades in
+            // 4. Bottom nav slides back up into view
             binding.bottomNav.animate().cancel();
             binding.bottomNav.setVisibility(View.VISIBLE);
             binding.bottomNav.setAlpha(0f);
@@ -577,18 +548,6 @@ public class MainActivity extends AppCompatActivity {
                     .translationY(0f)
                     .setDuration(duration)
                     .setInterpolator(interpolator)
-                    .start();
-
-            // 6. Beauty controls container hides smoothly
-            binding.layoutBeautyControls.animate().cancel();
-            binding.layoutBeautyControls.animate()
-                    .alpha(0f)
-                    .translationY(24f * density)
-                    .setDuration(duration)
-                    .withEndAction(() -> {
-                        binding.layoutBeautyControls.setVisibility(View.GONE);
-                        binding.layoutBeautyControls.setTranslationY(0f);
-                    })
                     .start();
         }
 
@@ -1325,15 +1284,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Shutter tap feedback animation
-        float currentScale = mIsPanelCollapsed ? 1.0f : 0.65f;
         binding.btnCapture.animate()
-                .scaleX(currentScale * 0.88f)
-                .scaleY(currentScale * 0.88f)
+                .scaleX(0.90f)
+                .scaleY(0.90f)
                 .setDuration(70)
                 .withEndAction(() -> {
                     binding.btnCapture.animate()
-                            .scaleX(currentScale)
-                            .scaleY(currentScale)
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
                             .setDuration(70)
                             .start();
                 })
@@ -1401,6 +1359,15 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "需要相机权限才能使用美颜相机！", LENGTH_LONG).show();
             }
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!mIsPanelCollapsed) {
+            togglePanel();
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override

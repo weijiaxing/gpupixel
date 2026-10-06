@@ -314,23 +314,44 @@
                     android:paddingBottom="8dp" />
             </HorizontalScrollView>
 
-            <!-- Category Tabs (美肤 / 美型 / 美妆 / 滤镜 / 贴纸 / 动态, docked at bottom) -->
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tab_layout"
+            <!-- Category Tabs Row + Close Button (美肤 / 美型 / 美妆 / 滤镜 / 贴纸 / 动态) -->
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
+                android:layout_height="40dp"
                 android:layout_marginTop="2dp"
-                android:layout_marginBottom="4dp"
-                android:background="@android:color/transparent"
-                app:tabGravity="center"
-                app:tabIndicatorColor="@color/camera_accent"
-                app:tabIndicatorFullWidth="false"
-                app:tabIndicatorHeight="2.5dp"
-                app:tabMode="fixed"
-                app:tabRippleColor="@null"
-                app:tabSelectedTextColor="@color/white"
-                app:tabTextAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                app:tabTextColor="@color/camera_text_secondary" />
+                android:layout_marginBottom="4dp">
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tab_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:layout_centerVertical="true"
+                    android:layout_toStartOf="@id/btn_close_beauty"
+                    android:background="@android:color/transparent"
+                    app:tabGravity="center"
+                    app:tabIndicatorColor="@color/camera_accent"
+                    app:tabIndicatorFullWidth="false"
+                    app:tabIndicatorHeight="2.5dp"
+                    app:tabMode="fixed"
+                    app:tabRippleColor="@null"
+                    app:tabSelectedTextColor="@color/white"
+                    app:tabTextAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    app:tabTextColor="@color/camera_text_secondary" />
+
+                <!-- Close / Finish Beauty Button (Down Arrow) -->
+                <ImageButton
+                    android:id="@+id/btn_close_beauty"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/bg_circle_icon_button"
+                    android:contentDescription="Close Beauty Panel"
+                    android:padding="7dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_arrow_down" />
+            </RelativeLayout>
         </LinearLayout>
 
         <!-- Bottom Navigation Bar (Text Only): Memories | Camera | Chats -->
