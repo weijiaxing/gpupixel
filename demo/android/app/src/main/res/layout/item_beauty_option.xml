@@ -1,37 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_root"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
+    android:layout_width="58dp"
+    android:layout_height="58dp"
+    android:layout_marginStart="6dp"
+    android:layout_marginEnd="6dp"
     android:clickable="true"
-    android:focusable="true"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:focusable="true">
 
     <FrameLayout
         android:id="@+id/iv_icon_container"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:background="@drawable/bg_item_circle">
 
         <ImageView
             android:id="@+id/iv_icon"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:layout_gravity="center"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="8dp"
             android:contentDescription="Option Icon"
             android:src="@drawable/ic_skin_smooth" />
-    </FrameLayout>
 
-    <TextView
-        android:id="@+id/tv_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:gravity="center"
-        android:text="磨皮"
-        android:textColor="@color/white"
-        android:textSize="12sp" />
-</LinearLayout>
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="6dp"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:text="磨皮"
+            android:textColor="#CCFFFFFF"
+            android:textSize="9.5sp"
+            android:textStyle="bold"
+            tools:ignore="SmallSp" />
+    </FrameLayout>
+</FrameLayout>

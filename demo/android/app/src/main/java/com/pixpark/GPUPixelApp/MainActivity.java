@@ -585,10 +585,12 @@ public class MainActivity extends AppCompatActivity {
     private void updateItemSelectionVisual(ItemBeautyOptionBinding itemBinding, boolean isSelected) {
         if (isSelected) {
             itemBinding.ivIconContainer.setBackgroundResource(R.drawable.bg_item_circle_selected);
-            itemBinding.tvTitle.setTextColor(ContextCompat.getColor(this, R.color.camera_accent));
+            itemBinding.tvTitle.setTextColor(ContextCompat.getColor(this, R.color.white));
+            itemBinding.tvTitle.setAlpha(1.0f);
         } else {
             itemBinding.ivIconContainer.setBackgroundResource(R.drawable.bg_item_circle);
             itemBinding.tvTitle.setTextColor(ContextCompat.getColor(this, R.color.white));
+            itemBinding.tvTitle.setAlpha(0.75f);
         }
     }
 

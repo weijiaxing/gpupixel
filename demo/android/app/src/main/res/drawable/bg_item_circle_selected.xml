@@ -3,5 +3,5 @@
     android:shape="oval">
     <solid android:color="@color/camera_accent" />
     <stroke android:width="2dp" android:color="#FFFFFFFF" />
-    <size android:width="52dp" android:height="52dp" />
+    <size android:width="58dp" android:height="58dp" />
 </shape>
