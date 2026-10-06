@@ -428,51 +428,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void togglePanel() {
         mIsPanelCollapsed = !mIsPanelCollapsed;
-        final long duration = 260;
+        final long duration = 220;
         final android.view.animation.Interpolator interpolator = new android.view.animation.DecelerateInterpolator();
-        final float density = getResources().getDisplayMetrics().density;
-
-        TransitionManager.beginDelayedTransition(binding.bottomPanel);
+        final float slideOffset = 20f * getResources().getDisplayMetrics().density;
 
         if (!mIsPanelCollapsed) {
-            // EXPAND BEAUTY PANEL (Tuning Mode: Douyin / Xingtu Style)
-            // 1. Shutter row (large shutter, album, wand, flip camera) slides down and hides
-            binding.layoutShutter.animate().cancel();
-            binding.layoutShutter.animate()
+            // ENTERING BEAUTY TUNING MODE (Douyin / Xingtu Style)
+            // 1. Fade out & slide down normal camera controls
+            binding.layoutCameraControls.animate().cancel();
+            binding.layoutCameraControls.animate()
                     .alpha(0f)
-                    .translationY(30f * density)
+                    .translationY(slideOffset)
                     .setDuration(duration)
                     .withEndAction(() -> {
-                        binding.layoutShutter.setVisibility(View.GONE);
-                        binding.layoutShutter.setTranslationY(0f);
+                        binding.layoutCameraControls.setVisibility(View.GONE);
+                        binding.layoutCameraControls.setTranslationY(0f);
                     })
                     .start();
 
-            // 2. Mode switcher (Photo | Video) slides up and hides
-            binding.layoutModeSwitch.animate().cancel();
-            binding.layoutModeSwitch.animate()
-                    .alpha(0f)
-                    .translationY(-16f * density)
-                    .setDuration(duration)
-                    .withEndAction(() -> {
-                        binding.layoutModeSwitch.setVisibility(View.GONE);
-                        binding.layoutModeSwitch.setTranslationY(0f);
-                    })
-                    .start();
-
-            // 3. Bottom nav (Memories | Camera | Chats) slides down and hides
-            binding.bottomNav.animate().cancel();
-            binding.bottomNav.animate()
-                    .alpha(0f)
-                    .translationY(16f * density)
-                    .setDuration(duration)
-                    .withEndAction(() -> {
-                        binding.bottomNav.setVisibility(View.GONE);
-                        binding.bottomNav.setTranslationY(0f);
-                    })
-                    .start();
-
-            // 4. Beauty controls container (Slider -> Items -> Category Tabs + Close) smoothly slides up
+            // 2. Prepare slider visibility for current category
             int selectedTab = binding.tabLayout.getSelectedTabPosition();
             if (selectedTab != CAT_FILTER && selectedTab != CAT_STICKER && selectedTab != CAT_ANIM_STICKER) {
                 binding.layoutSlider.setVisibility(View.VISIBLE);
@@ -480,9 +454,10 @@ public class MainActivity extends AppCompatActivity {
                 binding.layoutSlider.setVisibility(View.GONE);
             }
 
+            // 3. Fade in & slide up beauty tuning controls
             binding.layoutBeautyControls.setVisibility(View.VISIBLE);
             binding.layoutBeautyControls.setAlpha(0f);
-            binding.layoutBeautyControls.setTranslationY(30f * density);
+            binding.layoutBeautyControls.setTranslationY(slideOffset);
             binding.layoutBeautyControls.animate().cancel();
             binding.layoutBeautyControls.animate()
                     .alpha(1f)
@@ -492,12 +467,12 @@ public class MainActivity extends AppCompatActivity {
                     .start();
 
         } else {
-            // COLLAPSE BEAUTY PANEL (Return to Full Camera Shooting Mode)
-            // 1. Beauty controls container slides down and hides
+            // RETURNING TO CAMERA SHOOTING MODE
+            // 1. Fade out & slide down beauty tuning controls
             binding.layoutBeautyControls.animate().cancel();
             binding.layoutBeautyControls.animate()
                     .alpha(0f)
-                    .translationY(30f * density)
+                    .translationY(slideOffset)
                     .setDuration(duration)
                     .withEndAction(() -> {
                         binding.layoutBeautyControls.setVisibility(View.GONE);
@@ -505,36 +480,12 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .start();
 
-            // 2. Shutter row slides back up into view
-            binding.layoutShutter.animate().cancel();
-            binding.layoutShutter.setVisibility(View.VISIBLE);
-            binding.layoutShutter.setAlpha(0f);
-            binding.layoutShutter.setTranslationY(30f * density);
-            binding.layoutShutter.animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .setDuration(duration)
-                    .setInterpolator(interpolator)
-                    .start();
-
-            // 3. Mode switcher slides back down into view
-            binding.layoutModeSwitch.animate().cancel();
-            binding.layoutModeSwitch.setVisibility(View.VISIBLE);
-            binding.layoutModeSwitch.setAlpha(0f);
-            binding.layoutModeSwitch.setTranslationY(-16f * density);
-            binding.layoutModeSwitch.animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .setDuration(duration)
-                    .setInterpolator(interpolator)
-                    .start();
-
-            // 4. Bottom nav slides back up into view
-            binding.bottomNav.animate().cancel();
-            binding.bottomNav.setVisibility(View.VISIBLE);
-            binding.bottomNav.setAlpha(0f);
-            binding.bottomNav.setTranslationY(16f * density);
-            binding.bottomNav.animate()
+            // 2. Fade in & slide up normal camera controls
+            binding.layoutCameraControls.setVisibility(View.VISIBLE);
+            binding.layoutCameraControls.setAlpha(0f);
+            binding.layoutCameraControls.setTranslationY(slideOffset);
+            binding.layoutCameraControls.animate().cancel();
+            binding.layoutCameraControls.animate()
                     .alpha(1f)
                     .translationY(0f)
                     .setDuration(duration)
@@ -616,12 +567,12 @@ public class MainActivity extends AppCompatActivity {
         } else if (category == CAT_FILTER || category == CAT_STICKER || category == CAT_ANIM_STICKER) {
             // For filter/sticker/anim tab, hide the slider
             if (binding.layoutSlider.getVisibility() != View.GONE) {
-                TransitionManager.beginDelayedTransition(binding.bottomPanel);
+                TransitionManager.beginDelayedTransition(binding.layoutBeautyControls);
                 binding.layoutSlider.setVisibility(View.GONE);
             }
         } else {
             if (!mIsPanelCollapsed && binding.layoutSlider.getVisibility() != View.VISIBLE) {
-                TransitionManager.beginDelayedTransition(binding.bottomPanel);
+                TransitionManager.beginDelayedTransition(binding.layoutBeautyControls);
                 binding.layoutSlider.setVisibility(View.VISIBLE);
             }
         }
@@ -642,7 +593,7 @@ public class MainActivity extends AppCompatActivity {
     private void selectBeautyOption(BeautyOption option) {
         mSelectedOption = option;
         if (!mIsPanelCollapsed && binding.layoutSlider.getVisibility() != View.VISIBLE) {
-            TransitionManager.beginDelayedTransition(binding.bottomPanel);
+            TransitionManager.beginDelayedTransition(binding.layoutBeautyControls);
             binding.layoutSlider.setVisibility(View.VISIBLE);
         }
         binding.tvSliderLabel.setText(option.name);
