@@ -272,11 +272,15 @@ using namespace gpupixel;
   // 1. Switch Camera Button
   _switchCameraButton = [UIButton buttonWithType:UIButtonTypeCustom];
   _switchCameraButton.translatesAutoresizingMaskIntoConstraints = NO;
-  _switchCameraButton.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.15];
+  _switchCameraButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.27];
   _switchCameraButton.layer.cornerRadius = 22.0;
+  _switchCameraButton.layer.borderWidth = 1.0;
+  _switchCameraButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.13].CGColor;
   _switchCameraButton.layer.masksToBounds = YES;
   UIImage* switchIcon = [UIImage imageNamed:@"ic_switch_camera"];
-  if (!switchIcon) switchIcon = [UIImage systemImageNamed:@"camera.rotate.fill"];
+  if (!switchIcon && @available(iOS 13.0, *)) {
+    switchIcon = [UIImage systemImageNamed:@"camera.rotate.fill"];
+  }
   [_switchCameraButton setImage:switchIcon forState:UIControlStateNormal];
   _switchCameraButton.tintColor = [UIColor whiteColor];
   [_switchCameraButton addTarget:self action:@selector(onSwitchCameraTapped) forControlEvents:UIControlEventTouchUpInside];
@@ -285,32 +289,46 @@ using namespace gpupixel;
   // 2. Flashlight Button
   _flashButton = [UIButton buttonWithType:UIButtonTypeCustom];
   _flashButton.translatesAutoresizingMaskIntoConstraints = NO;
-  _flashButton.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.15];
+  _flashButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.27];
   _flashButton.layer.cornerRadius = 22.0;
+  _flashButton.layer.borderWidth = 1.0;
+  _flashButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.13].CGColor;
   _flashButton.layer.masksToBounds = YES;
-  UIImage* flashIcon = [UIImage imageNamed:@"ic_flash_off"];
-  if (!flashIcon) flashIcon = [UIImage systemImageNamed:@"bolt.slash.fill"];
-  [_flashButton setImage:flashIcon forState:UIControlStateNormal];
   _flashButton.tintColor = [UIColor whiteColor];
   [_flashButton addTarget:self action:@selector(onFlashTapped) forControlEvents:UIControlEventTouchUpInside];
   [_topBarView addSubview:_flashButton];
+  [self updateFlashButtonState];
 
-  // 3. Reset Button
+  // 3. Reset Button (Aligned with Android btn_reset: 16x16 icon + 13sp text in pill)
   _resetButton = [UIButton buttonWithType:UIButtonTypeCustom];
   _resetButton.translatesAutoresizingMaskIntoConstraints = NO;
-  _resetButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.45];
+  _resetButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.40];
   _resetButton.layer.cornerRadius = 18.0;
   _resetButton.layer.borderWidth = 1.0;
-  _resetButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.2].CGColor;
-  [_resetButton setTitle:@" 重置" forState:UIControlStateNormal];
-  [_resetButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-  _resetButton.titleLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
-  UIImage* resetIcon = [UIImage imageNamed:@"ic_reset"];
-  if (!resetIcon) resetIcon = [UIImage systemImageNamed:@"arrow.counterclockwise"];
-  [_resetButton setImage:resetIcon forState:UIControlStateNormal];
-  _resetButton.tintColor = [UIColor whiteColor];
-  _resetButton.contentEdgeInsets = UIEdgeInsetsMake(6, 12, 6, 14);
+  _resetButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.27].CGColor;
+  _resetButton.layer.masksToBounds = YES;
   [_resetButton addTarget:self action:@selector(onResetTapped) forControlEvents:UIControlEventTouchUpInside];
+
+  UIImageView* resetIconView = [[UIImageView alloc] init];
+  resetIconView.translatesAutoresizingMaskIntoConstraints = NO;
+  UIImage* resetIcon = [UIImage imageNamed:@"ic_reset"];
+  if (!resetIcon && @available(iOS 13.0, *)) {
+    resetIcon = [UIImage systemImageNamed:@"arrow.counterclockwise"];
+  }
+  resetIconView.image = resetIcon;
+  resetIconView.contentMode = UIViewContentModeScaleAspectFit;
+  resetIconView.tintColor = [UIColor whiteColor];
+  resetIconView.userInteractionEnabled = NO;
+  [_resetButton addSubview:resetIconView];
+
+  UILabel* resetLabel = [[UILabel alloc] init];
+  resetLabel.translatesAutoresizingMaskIntoConstraints = NO;
+  resetLabel.text = @"重置";
+  resetLabel.textColor = [UIColor whiteColor];
+  resetLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
+  resetLabel.userInteractionEnabled = NO;
+  [_resetButton addSubview:resetLabel];
+
   [_topBarView addSubview:_resetButton];
 
   [NSLayoutConstraint activateConstraints:@[
@@ -332,6 +350,15 @@ using namespace gpupixel;
     [_resetButton.trailingAnchor constraintEqualToAnchor:_topBarView.trailingAnchor constant:-20],
     [_resetButton.centerYAnchor constraintEqualToAnchor:_switchCameraButton.centerYAnchor],
     [_resetButton.heightAnchor constraintEqualToConstant:36],
+
+    [resetIconView.leadingAnchor constraintEqualToAnchor:_resetButton.leadingAnchor constant:12],
+    [resetIconView.centerYAnchor constraintEqualToAnchor:_resetButton.centerYAnchor],
+    [resetIconView.widthAnchor constraintEqualToConstant:16],
+    [resetIconView.heightAnchor constraintEqualToConstant:16],
+
+    [resetLabel.leadingAnchor constraintEqualToAnchor:resetIconView.trailingAnchor constant:6],
+    [resetLabel.centerYAnchor constraintEqualToAnchor:_resetButton.centerYAnchor],
+    [resetLabel.trailingAnchor constraintEqualToAnchor:_resetButton.trailingAnchor constant:-14],
   ]];
 }
 
@@ -339,34 +366,48 @@ using namespace gpupixel;
   // 1. Face Status Badge (Bottom-Left)
   _faceStatusBadge = [[UILabel alloc] init];
   _faceStatusBadge.translatesAutoresizingMaskIntoConstraints = NO;
-  _faceStatusBadge.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.45];
+  _faceStatusBadge.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.40];
   _faceStatusBadge.layer.cornerRadius = 14.0;
   _faceStatusBadge.layer.borderWidth = 1.0;
-  _faceStatusBadge.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.18].CGColor;
+  _faceStatusBadge.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.27].CGColor;
   _faceStatusBadge.layer.masksToBounds = YES;
   _faceStatusBadge.text = @"人脸检测中...";
-  _faceStatusBadge.textColor = [UIColor colorWithWhite:1.0 alpha:0.75];
+  _faceStatusBadge.textColor = [UIColor colorWithWhite:1.0 alpha:0.60];
   _faceStatusBadge.font = [UIFont systemFontOfSize:11 weight:UIFontWeightMedium];
   _faceStatusBadge.textAlignment = NSTextAlignmentCenter;
   [self.view addSubview:_faceStatusBadge];
 
-  // 2. Compare Button (Bottom-Right, Hold to Compare)
+  // 2. Compare Button (Bottom-Right, Hold to Compare - Aligned with Android btn_compare)
   _compareButton = [UIButton buttonWithType:UIButtonTypeCustom];
   _compareButton.translatesAutoresizingMaskIntoConstraints = NO;
-  _compareButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.45];
-  _compareButton.layer.cornerRadius = 19.0;
+  _compareButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.40];
+  _compareButton.layer.cornerRadius = 18.0;
   _compareButton.layer.borderWidth = 1.0;
-  _compareButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.2].CGColor;
-  [_compareButton setTitle:@" 按住对比" forState:UIControlStateNormal];
-  [_compareButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-  _compareButton.titleLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightBold];
-  UIImage* cmpIcon = [UIImage imageNamed:@"ic_compare"];
-  if (!cmpIcon) cmpIcon = [UIImage systemImageNamed:@"square.split.2x1"];
-  [_compareButton setImage:cmpIcon forState:UIControlStateNormal];
-  _compareButton.tintColor = [UIColor whiteColor];
-  _compareButton.contentEdgeInsets = UIEdgeInsetsMake(8, 14, 8, 16);
+  _compareButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.27].CGColor;
+  _compareButton.layer.masksToBounds = YES;
   [_compareButton addTarget:self action:@selector(onCompareTouchDown) forControlEvents:UIControlEventTouchDown];
   [_compareButton addTarget:self action:@selector(onCompareTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
+
+  UIImageView* cmpIconView = [[UIImageView alloc] init];
+  cmpIconView.translatesAutoresizingMaskIntoConstraints = NO;
+  UIImage* cmpIcon = [UIImage imageNamed:@"ic_compare"];
+  if (!cmpIcon && @available(iOS 13.0, *)) {
+    cmpIcon = [UIImage systemImageNamed:@"square.split.2x1"];
+  }
+  cmpIconView.image = cmpIcon;
+  cmpIconView.contentMode = UIViewContentModeScaleAspectFit;
+  cmpIconView.tintColor = [UIColor whiteColor];
+  cmpIconView.userInteractionEnabled = NO;
+  [_compareButton addSubview:cmpIconView];
+
+  UILabel* cmpLabel = [[UILabel alloc] init];
+  cmpLabel.translatesAutoresizingMaskIntoConstraints = NO;
+  cmpLabel.text = @"按住对比";
+  cmpLabel.textColor = [UIColor whiteColor];
+  cmpLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightBold];
+  cmpLabel.userInteractionEnabled = NO;
+  [_compareButton addSubview:cmpLabel];
+
   [self.view addSubview:_compareButton];
 
   [NSLayoutConstraint activateConstraints:@[
@@ -377,7 +418,16 @@ using namespace gpupixel;
 
     [_compareButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
     [_compareButton.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-200],
-    [_compareButton.heightAnchor constraintEqualToConstant:38],
+    [_compareButton.heightAnchor constraintEqualToConstant:36],
+
+    [cmpIconView.leadingAnchor constraintEqualToAnchor:_compareButton.leadingAnchor constant:14],
+    [cmpIconView.centerYAnchor constraintEqualToAnchor:_compareButton.centerYAnchor],
+    [cmpIconView.widthAnchor constraintEqualToConstant:16],
+    [cmpIconView.heightAnchor constraintEqualToConstant:16],
+
+    [cmpLabel.leadingAnchor constraintEqualToAnchor:cmpIconView.trailingAnchor constant:6],
+    [cmpLabel.centerYAnchor constraintEqualToAnchor:_compareButton.centerYAnchor],
+    [cmpLabel.trailingAnchor constraintEqualToAnchor:_compareButton.trailingAnchor constant:-16],
   ]];
 }
 
@@ -809,11 +859,13 @@ using namespace gpupixel;
 
 - (void)onCompareTouchDown {
   self.isComparing = YES;
+  _compareButton.backgroundColor = [UIColor colorWithRed:1.0 green:0.325 blue:0.463 alpha:0.60];
   [self applyBypass:YES];
 }
 
 - (void)onCompareTouchUp {
   self.isComparing = NO;
+  _compareButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.40];
   [self applyBypass:NO];
 }
 

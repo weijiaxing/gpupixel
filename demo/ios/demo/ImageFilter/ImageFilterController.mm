@@ -232,38 +232,66 @@ using namespace gpupixel;
   // 2. Floating Reset Button (Top Right under top bar)
   _resetButton = [UIButton buttonWithType:UIButtonTypeCustom];
   _resetButton.translatesAutoresizingMaskIntoConstraints = NO;
-  _resetButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.45];
-  _resetButton.layer.cornerRadius = 16.0;
+  _resetButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.40];
+  _resetButton.layer.cornerRadius = 18.0;
   _resetButton.layer.borderWidth = 1.0;
-  _resetButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.2].CGColor;
-  [_resetButton setTitle:@" 重置" forState:UIControlStateNormal];
-  [_resetButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-  _resetButton.titleLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
-  UIImage* resetIcon = [UIImage imageNamed:@"ic_reset"];
-  if (!resetIcon) resetIcon = [UIImage systemImageNamed:@"arrow.counterclockwise"];
-  [_resetButton setImage:resetIcon forState:UIControlStateNormal];
-  _resetButton.tintColor = [UIColor whiteColor];
-  _resetButton.contentEdgeInsets = UIEdgeInsetsMake(6, 12, 6, 14);
+  _resetButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.27].CGColor;
+  _resetButton.layer.masksToBounds = YES;
   [_resetButton addTarget:self action:@selector(onResetTapped) forControlEvents:UIControlEventTouchUpInside];
+
+  UIImageView* resetIconView = [[UIImageView alloc] init];
+  resetIconView.translatesAutoresizingMaskIntoConstraints = NO;
+  UIImage* resetIcon = [UIImage imageNamed:@"ic_reset"];
+  if (!resetIcon && @available(iOS 13.0, *)) {
+    resetIcon = [UIImage systemImageNamed:@"arrow.counterclockwise"];
+  }
+  resetIconView.image = resetIcon;
+  resetIconView.contentMode = UIViewContentModeScaleAspectFit;
+  resetIconView.tintColor = [UIColor whiteColor];
+  resetIconView.userInteractionEnabled = NO;
+  [_resetButton addSubview:resetIconView];
+
+  UILabel* resetLabel = [[UILabel alloc] init];
+  resetLabel.translatesAutoresizingMaskIntoConstraints = NO;
+  resetLabel.text = @"重置";
+  resetLabel.textColor = [UIColor whiteColor];
+  resetLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
+  resetLabel.userInteractionEnabled = NO;
+  [_resetButton addSubview:resetLabel];
+
   [self.view addSubview:_resetButton];
 
   // 3. Floating Compare Button (Above beauty panel)
   _compareButton = [UIButton buttonWithType:UIButtonTypeCustom];
   _compareButton.translatesAutoresizingMaskIntoConstraints = NO;
-  _compareButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.45];
+  _compareButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.40];
   _compareButton.layer.cornerRadius = 18.0;
   _compareButton.layer.borderWidth = 1.0;
-  _compareButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.2].CGColor;
-  [_compareButton setTitle:@" 按住对比" forState:UIControlStateNormal];
-  [_compareButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-  _compareButton.titleLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightBold];
-  UIImage* cmpIcon = [UIImage imageNamed:@"ic_compare"];
-  if (!cmpIcon) cmpIcon = [UIImage systemImageNamed:@"square.split.2x1"];
-  [_compareButton setImage:cmpIcon forState:UIControlStateNormal];
-  _compareButton.tintColor = [UIColor whiteColor];
-  _compareButton.contentEdgeInsets = UIEdgeInsetsMake(8, 14, 8, 16);
+  _compareButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.27].CGColor;
+  _compareButton.layer.masksToBounds = YES;
   [_compareButton addTarget:self action:@selector(onCompareTouchDown) forControlEvents:UIControlEventTouchDown];
   [_compareButton addTarget:self action:@selector(onCompareTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
+
+  UIImageView* cmpIconView = [[UIImageView alloc] init];
+  cmpIconView.translatesAutoresizingMaskIntoConstraints = NO;
+  UIImage* cmpIcon = [UIImage imageNamed:@"ic_compare"];
+  if (!cmpIcon && @available(iOS 13.0, *)) {
+    cmpIcon = [UIImage systemImageNamed:@"square.split.2x1"];
+  }
+  cmpIconView.image = cmpIcon;
+  cmpIconView.contentMode = UIViewContentModeScaleAspectFit;
+  cmpIconView.tintColor = [UIColor whiteColor];
+  cmpIconView.userInteractionEnabled = NO;
+  [_compareButton addSubview:cmpIconView];
+
+  UILabel* cmpLabel = [[UILabel alloc] init];
+  cmpLabel.translatesAutoresizingMaskIntoConstraints = NO;
+  cmpLabel.text = @"按住对比";
+  cmpLabel.textColor = [UIColor whiteColor];
+  cmpLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightBold];
+  cmpLabel.userInteractionEnabled = NO;
+  [_compareButton addSubview:cmpLabel];
+
   [self.view addSubview:_compareButton];
 
   // 4. Beauty Panel
@@ -294,12 +322,30 @@ using namespace gpupixel;
     // Reset button
     [_resetButton.topAnchor constraintEqualToAnchor:_topBarView.bottomAnchor constant:12],
     [_resetButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-16],
-    [_resetButton.heightAnchor constraintEqualToConstant:32],
+    [_resetButton.heightAnchor constraintEqualToConstant:36],
+
+    [resetIconView.leadingAnchor constraintEqualToAnchor:_resetButton.leadingAnchor constant:12],
+    [resetIconView.centerYAnchor constraintEqualToAnchor:_resetButton.centerYAnchor],
+    [resetIconView.widthAnchor constraintEqualToConstant:16],
+    [resetIconView.heightAnchor constraintEqualToConstant:16],
+
+    [resetLabel.leadingAnchor constraintEqualToAnchor:resetIconView.trailingAnchor constant:6],
+    [resetLabel.centerYAnchor constraintEqualToAnchor:_resetButton.centerYAnchor],
+    [resetLabel.trailingAnchor constraintEqualToAnchor:_resetButton.trailingAnchor constant:-14],
 
     // Compare button
     [_compareButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-16],
     [_compareButton.bottomAnchor constraintEqualToAnchor:_filterToolbarView.topAnchor constant:-12],
     [_compareButton.heightAnchor constraintEqualToConstant:36],
+
+    [cmpIconView.leadingAnchor constraintEqualToAnchor:_compareButton.leadingAnchor constant:14],
+    [cmpIconView.centerYAnchor constraintEqualToAnchor:_compareButton.centerYAnchor],
+    [cmpIconView.widthAnchor constraintEqualToConstant:16],
+    [cmpIconView.heightAnchor constraintEqualToConstant:16],
+
+    [cmpLabel.leadingAnchor constraintEqualToAnchor:cmpIconView.trailingAnchor constant:6],
+    [cmpLabel.centerYAnchor constraintEqualToAnchor:_compareButton.centerYAnchor],
+    [cmpLabel.trailingAnchor constraintEqualToAnchor:_compareButton.trailingAnchor constant:-16],
 
     // Filter toolbar view
     [_filterToolbarView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
@@ -332,12 +378,14 @@ using namespace gpupixel;
 
 - (void)onCompareTouchDown {
   self.isComparing = YES;
+  _compareButton.backgroundColor = [UIColor colorWithRed:1.0 green:0.325 blue:0.463 alpha:0.60];
   [self applyBypass:YES];
   if (_gpuSourceImage) _gpuSourceImage->Render();
 }
 
 - (void)onCompareTouchUp {
   self.isComparing = NO;
+  _compareButton.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.40];
   [self applyBypass:NO];
   if (_gpuSourceImage) _gpuSourceImage->Render();
 }
